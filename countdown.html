@@ -3,18 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多組倒數計時器（提示音3秒後停止）</title>
+    <title>多功能計時器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             flex-direction: column;
             gap: 30px;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f4f4f4;
             color: #333;
+            margin: 0;
+            padding-top: 20px;
+        }
+        .date-display {
+            width: 100%;
+            background-color: #fff;
+            color: #333;
+            font-size: 1.2em;
+            padding: 15px 0;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
         }
         .main-controls {
             margin-bottom: 20px;
@@ -80,34 +99,38 @@
 </head>
 <body>
 
-    <div class="main-controls">
-        <button onclick="resetAllTimers()">全部重設</button>
-    </div>
+    <div id="dateResult" class="date-display"></div>
 
-    <div class="timer-container">
-        <div id="timer1" class="timer"></div>
-        <div class="label">計時器 1 (2:25)</div>
-        <div class="controls">
-            <button class="start-btn" onclick="startTimer('timer1', 2, 25)">開始</button>
-            <button class="reset-btn" onclick="resetTimer('timer1', 2, 25)">重設</button>
+    <div class="content">
+        <div class="main-controls">
+            <button onclick="resetAllTimers()">全部重設</button>
         </div>
-    </div>
 
-    <div class="timer-container">
-        <div id="timer2" class="timer"></div>
-        <div class="label">計時器 2 (1:18)</div>
-        <div class="controls">
-            <button class="start-btn" onclick="startTimer('timer2', 1, 18)">開始</button>
-            <button class="reset-btn" onclick="resetTimer('timer2', 1, 18)">重設</button>
+        <div class="timer-container">
+            <div id="timer1" class="timer"></div>
+            <div class="label">計時器 1 (2:25)</div>
+            <div class="controls">
+                <button class="start-btn" onclick="startTimer('timer1', 2, 25)">開始</button>
+                <button class="reset-btn" onclick="resetTimer('timer1', 2, 25)">重設</button>
+            </div>
         </div>
-    </div>
 
-    <div class="timer-container">
-        <div id="timer3" class="timer"></div>
-        <div class="label">計時器 3 (2:35)</div>
-        <div class="controls">
-            <button class="start-btn" onclick="startTimer('timer3', 2, 35)">開始</button>
-            <button class="reset-btn" onclick="resetTimer('timer3', 2, 35)">重設</button>
+        <div class="timer-container">
+            <div id="timer2" class="timer"></div>
+            <div class="label">計時器 2 (1:18)</div>
+            <div class="controls">
+                <button class="start-btn" onclick="startTimer('timer2', 1, 18)">開始</button>
+                <button class="reset-btn" onclick="resetTimer('timer2', 1, 18)">重設</button>
+            </div>
+        </div>
+
+        <div class="timer-container">
+            <div id="timer3" class="timer"></div>
+            <div class="label">計時器 3 (2:35)</div>
+            <div class="controls">
+                <button class="start-btn" onclick="startTimer('timer3', 2, 35)">開始</button>
+                <button class="reset-btn" onclick="resetTimer('timer3', 2, 35)">重設</button>
+            </div>
         </div>
     </div>
     
@@ -122,9 +145,8 @@
             { id: 'timer2', minutes: 1, seconds: 18 },
             { id: 'timer3', minutes: 2, seconds: 35 }
         ];
-
         const alarmSound = document.getElementById('alarmSound');
-        let soundTimeoutId = null; // 用來儲存計時器ID
+        let soundTimeoutId = null;
 
         function displayTime(elementId, minutes, seconds) {
             const timerElement = document.getElementById(elementId);
@@ -135,24 +157,20 @@
         }
 
         function playAlarm() {
-            // 先清除舊的停止計時器，避免重複執行
             if (soundTimeoutId) {
                 clearTimeout(soundTimeoutId);
             }
             
-            // 播放提示音
             alarmSound.play().catch(e => console.log('音訊播放失敗:', e));
             
-            // 設定3秒後停止播放
             soundTimeoutId = setTimeout(() => {
                 alarmSound.pause();
-                alarmSound.currentTime = 0; // 重置音訊到開頭
-            }, 3000); // 3000 毫秒 = 3 秒
+                alarmSound.currentTime = 0;
+            }, 3000);
         }
 
         function startTimer(elementId, initialMinutes, initialSeconds) {
             clearInterval(timerIntervals[elementId]);
-
             let totalSeconds = initialMinutes * 60 + initialSeconds;
             const timerElement = document.getElementById(elementId);
 
@@ -164,13 +182,11 @@
                     playAlarm();
                     return;
                 }
-
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
                 displayTime(elementId, minutes, seconds);
                 totalSeconds--;
             }
-
             updateTimer();
             timerIntervals[elementId] = setInterval(updateTimer, 1000);
         }
@@ -178,7 +194,6 @@
         function resetTimer(elementId, initialMinutes, initialSeconds) {
             clearInterval(timerIntervals[elementId]);
             displayTime(elementId, initialMinutes, initialSeconds);
-            // 停止正在播放的提示音並清除停止計時器
             if (soundTimeoutId) {
                 clearTimeout(soundTimeoutId);
                 alarmSound.pause();
@@ -191,8 +206,27 @@
                 resetTimer(timer.id, timer.minutes, timer.seconds);
             });
         }
+        
+        // 日期計算和顯示功能
+        function updateDateResult() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const result = (month + day) * 5;
+
+            const binaryResult = (result >>> 0).toString(2).padStart(8, '0');
+            const formattedBinary = binaryResult.substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + binaryResult.substring(4, 8);
+
+            const dateResultElement = document.getElementById('dateResult');
+            dateResultElement.innerHTML = `
+                今天是 ${month} 月 ${day} 日<br>
+                (${month} + ${day}) * 5 = ${result}<br>
+                轉換為 8 位元二進位: <strong>${formattedBinary}</strong>
+            `;
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
+            updateDateResult();
             resetAllTimers();
         });
     </script>
