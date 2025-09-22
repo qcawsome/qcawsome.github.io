@@ -11,7 +11,7 @@
             justify-content: flex-start;
             align-items: center;
             flex-direction: column;
-            gap: 20px; /* 統一減少各區塊之間的間距 */
+            gap: 20px; 
             min-height: 100vh;
             background-color: #f4f4f4;
             color: #333;
@@ -38,7 +38,8 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 50px;
+            gap: 50px; 
+            width: 100%;
         }
         .group-container {
             display: flex;
@@ -49,9 +50,12 @@
             background: #e0e0e0;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            flex: 0 0 calc(20% - 40px);
+            box-sizing: border-box; 
         }
         .group-controls {
             margin-top: 10px;
+            width: 100%;
         }
         .group-controls button {
             padding: 10px 20px;
@@ -62,6 +66,7 @@
             color: #fff;
             background-color: #007BFF;
             transition: background-color 0.2s;
+            width: 100%;
         }
         .group-controls button:hover {
             background-color: #0056b3;
@@ -72,6 +77,7 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
+            width: 100%; 
         }
         .timer-container {
             text-align: center;
@@ -79,7 +85,8 @@
             padding: 20px 40px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            width: 200px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .timer {
             font-size: 2.5em;
@@ -90,10 +97,10 @@
         .timer.running {
             color: #28a745;
         }
-        .label {
-            font-size: 1.1em;
-            color: #555;
-            margin-bottom: 15px;
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
         }
         .controls button {
             padding: 8px 15px;
@@ -102,7 +109,7 @@
             border: none;
             border-radius: 5px;
             color: #fff;
-            margin: 0 5px;
+            flex: 1;
             transition: background-color 0.2s;
         }
         .start-btn {
@@ -113,6 +120,7 @@
         }
         .reset-btn {
             background-color: #6c757d;
+            display: none;
         }
         .reset-btn:hover {
             background-color: #5a6268;
@@ -127,7 +135,7 @@
     <div id="dateResult" class="date-display"></div>
 
     <div class="controls-container">
-        <label for="groupCount">選擇計時器群組數:</label>
+        <label for="groupCount">群組數:</label>
         <select id="groupCount" onchange="generateUnits(this.value)">
             <option value="1" selected>1</option>
             <option value="2">2</option>
@@ -200,6 +208,11 @@
 
             timerElement.classList.add('running');
 
+            // 隱藏開始按鈕，顯示重設按鈕
+            const container = timerElement.closest('.timer-container');
+            container.querySelector('.start-btn').style.display = 'none';
+            container.querySelector('.reset-btn').style.display = 'block';
+
             function updateTimer() {
                 if (totalSeconds < 0) {
                     clearInterval(timerIntervals[elementId]);
@@ -231,6 +244,11 @@
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
             }
+
+            // 顯示開始按鈕，隱藏重設按鈕
+            const container = timerElement.closest('.timer-container');
+            container.querySelector('.start-btn').style.display = 'block';
+            container.querySelector('.reset-btn').style.display = 'none';
         }
 
         function resetGroupTimers(groupIndex) {
@@ -262,7 +280,6 @@
                                             data-initial-minutes="${preset.minutes}" 
                                             data-initial-seconds="${preset.seconds}">
                                         </div>
-                                        <div class="label">計時器 ${index + 1} (${preset.minutes}:${String(preset.seconds).padStart(2, '0')})</div>
                                         <div class="controls">
                                             <button class="start-btn" onclick="startTimer('${timerId}')">開始</button>
                                             <button class="reset-btn" onclick="resetTimer('${timerId}')">重設</button>
@@ -288,12 +305,20 @@
             const day = taiwanTime.getDate();
             const result = (month + day) * 5;
             const binaryResult = (result >>> 0).toString(2).padStart(8, '0');
+
+            const onePositions = [];
+            for (let i = 0; i < binaryResult.length; i++) {
+                if (binaryResult[i] === '1') {
+                    onePositions.push(i + 1);
+                }
+            }
+            
             const formattedBinary = binaryResult.substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + binaryResult.substring(4, 8);
+
             const dateResultElement = document.getElementById('dateResult');
             dateResultElement.innerHTML = `
-                今天是 ${month} 月 ${day} 日<br>
-                (${month} + ${day}) * 5 = ${result}<br>
-                轉換為 8 位元二進位: <strong>${formattedBinary}</strong>
+                二進位: <strong>${formattedBinary}</strong><br>
+                位數: <strong>${onePositions.join('')}</strong>
             `;
         }
 
