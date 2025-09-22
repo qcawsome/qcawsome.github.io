@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多功能計時器</title>
+    <title>多組計時器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,12 +11,19 @@
             justify-content: flex-start;
             align-items: center;
             flex-direction: column;
-            gap: 30px;
+            gap: 20px; /* 統一減少各區塊之間的間距 */
             min-height: 100vh;
             background-color: #f4f4f4;
             color: #333;
             margin: 0;
             padding-top: 20px;
+        }
+        .controls-container {
+            width: 100%;
+            text-align: center;
+        }
+        .controls-container label, .controls-container select {
+            font-size: 1.1em;
         }
         .date-display {
             width: 100%;
@@ -26,21 +33,29 @@
             padding: 15px 0;
             text-align: center;
             border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
         }
-        .content {
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 50px;
+        }
+        .group-container {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            gap: 30px;
+            gap: 20px;
+            padding: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .main-controls {
-            margin-bottom: 20px;
+        .group-controls {
+            margin-top: 10px;
         }
-        .main-controls button {
+        .group-controls button {
             padding: 10px 20px;
-            font-size: 1.1em;
+            font-size: 1em;
             cursor: pointer;
             border: none;
             border-radius: 5px;
@@ -48,8 +63,15 @@
             background-color: #007BFF;
             transition: background-color 0.2s;
         }
-        .main-controls button:hover {
+        .group-controls button:hover {
             background-color: #0056b3;
+        }
+        .timers-group {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
         }
         .timer-container {
             text-align: center;
@@ -57,22 +79,25 @@
             padding: 20px 40px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            width: 250px;
+            width: 200px;
         }
         .timer {
-            font-size: 3em;
+            font-size: 2.5em;
             font-weight: bold;
             color: #007BFF;
             margin-bottom: 10px;
         }
+        .timer.running {
+            color: #28a745;
+        }
         .label {
-            font-size: 1.2em;
+            font-size: 1.1em;
             color: #555;
             margin-bottom: 15px;
         }
         .controls button {
             padding: 8px 15px;
-            font-size: 1em;
+            font-size: 0.9em;
             cursor: pointer;
             border: none;
             border-radius: 5px;
@@ -101,38 +126,33 @@
 
     <div id="dateResult" class="date-display"></div>
 
-    <div class="content">
-        <div class="main-controls">
-            <button onclick="resetAllTimers()">全部重設</button>
-        </div>
-
-        <div class="timer-container">
-            <div id="timer1" class="timer"></div>
-            <div class="label">計時器 1 (2:25)</div>
-            <div class="controls">
-                <button class="start-btn" onclick="startTimer('timer1', 2, 25)">開始</button>
-                <button class="reset-btn" onclick="resetTimer('timer1', 2, 25)">重設</button>
-            </div>
-        </div>
-
-        <div class="timer-container">
-            <div id="timer2" class="timer"></div>
-            <div class="label">計時器 2 (1:18)</div>
-            <div class="controls">
-                <button class="start-btn" onclick="startTimer('timer2', 1, 18)">開始</button>
-                <button class="reset-btn" onclick="resetTimer('timer2', 1, 18)">重設</button>
-            </div>
-        </div>
-
-        <div class="timer-container">
-            <div id="timer3" class="timer"></div>
-            <div class="label">計時器 3 (2:35)</div>
-            <div class="controls">
-                <button class="start-btn" onclick="startTimer('timer3', 2, 35)">開始</button>
-                <button class="reset-btn" onclick="resetTimer('timer3', 2, 35)">重設</button>
-            </div>
-        </div>
+    <div class="controls-container">
+        <label for="groupCount">選擇計時器群組數:</label>
+        <select id="groupCount" onchange="generateUnits(this.value)">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20</option>
+        </select>
     </div>
+
+    <div id="mainContainer" class="main-container"></div>
     
     <audio id="alarmSound">
         <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
@@ -140,13 +160,14 @@
 
     <script>
         const timerIntervals = {};
-        const timers = [
-            { id: 'timer1', minutes: 2, seconds: 25 },
-            { id: 'timer2', minutes: 1, seconds: 18 },
-            { id: 'timer3', minutes: 2, seconds: 35 }
-        ];
         const alarmSound = document.getElementById('alarmSound');
         let soundTimeoutId = null;
+
+        const timerPresets = [
+            { minutes: 2, seconds: 25 },
+            { minutes: 1, seconds: 18 },
+            { minutes: 2, seconds: 35 }
+        ];
 
         function displayTime(elementId, minutes, seconds) {
             const timerElement = document.getElementById(elementId);
@@ -169,15 +190,21 @@
             }, 3000);
         }
 
-        function startTimer(elementId, initialMinutes, initialSeconds) {
+        function startTimer(elementId) {
+            const timerElement = document.getElementById(elementId);
+            const initialMinutes = parseInt(timerElement.dataset.initialMinutes, 10);
+            const initialSeconds = parseInt(timerElement.dataset.initialSeconds, 10);
+
             clearInterval(timerIntervals[elementId]);
             let totalSeconds = initialMinutes * 60 + initialSeconds;
-            const timerElement = document.getElementById(elementId);
+
+            timerElement.classList.add('running');
 
             function updateTimer() {
                 if (totalSeconds < 0) {
                     clearInterval(timerIntervals[elementId]);
                     timerElement.textContent = "00:00";
+                    timerElement.classList.remove('running');
                     timerElement.classList.add('finished');
                     playAlarm();
                     return;
@@ -191,9 +218,14 @@
             timerIntervals[elementId] = setInterval(updateTimer, 1000);
         }
 
-        function resetTimer(elementId, initialMinutes, initialSeconds) {
+        function resetTimer(elementId) {
+            const timerElement = document.getElementById(elementId);
+            const initialMinutes = parseInt(timerElement.dataset.initialMinutes, 10);
+            const initialSeconds = parseInt(timerElement.dataset.initialSeconds, 10);
+
             clearInterval(timerIntervals[elementId]);
             displayTime(elementId, initialMinutes, initialSeconds);
+            timerElement.classList.remove('running');
             if (soundTimeoutId) {
                 clearTimeout(soundTimeoutId);
                 alarmSound.pause();
@@ -201,28 +233,62 @@
             }
         }
 
-        function resetAllTimers() {
-            timers.forEach(timer => {
-                resetTimer(timer.id, timer.minutes, timer.seconds);
+        function resetGroupTimers(groupIndex) {
+            const groupContainer = document.getElementById(`group_${groupIndex}`);
+            if (groupContainer) {
+                const timerElements = groupContainer.querySelectorAll('.timer');
+                timerElements.forEach(timer => {
+                    resetTimer(timer.id);
+                });
+            }
+        }
+        
+        function generateUnits(count) {
+            const mainContainer = document.getElementById('mainContainer');
+            mainContainer.innerHTML = '';
+            
+            for (let i = 1; i <= count; i++) {
+                const groupHtml = `
+                    <div class="group-container" id="group_${i}">
+                        <div class="group-controls">
+                            <button onclick="resetGroupTimers(${i})">群組 ${i} 全部重設</button>
+                        </div>
+                        <div class="timers-group">
+                            ${timerPresets.map((preset, index) => {
+                                const timerId = `timer_${i}_${index + 1}`;
+                                return `
+                                    <div class="timer-container">
+                                        <div id="${timerId}" class="timer" 
+                                            data-initial-minutes="${preset.minutes}" 
+                                            data-initial-seconds="${preset.seconds}">
+                                        </div>
+                                        <div class="label">計時器 ${index + 1} (${preset.minutes}:${String(preset.seconds).padStart(2, '0')})</div>
+                                        <div class="controls">
+                                            <button class="start-btn" onclick="startTimer('${timerId}')">開始</button>
+                                            <button class="reset-btn" onclick="resetTimer('${timerId}')">重設</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                mainContainer.insertAdjacentHTML('beforeend', groupHtml);
+            }
+            document.querySelectorAll('.group-container').forEach((group, index) => {
+                resetGroupTimers(index + 1);
             });
         }
         
-        // 日期計算和顯示功能
         function updateDateResult() {
-            // 取得 UTC 時間
             const now = new Date();
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            
-            // 轉換為台灣時間 (UTC+8)
             const taiwanTime = new Date(utcTime + (8 * 3600000));
-
             const month = taiwanTime.getMonth() + 1;
             const day = taiwanTime.getDate();
             const result = (month + day) * 5;
-
             const binaryResult = (result >>> 0).toString(2).padStart(8, '0');
             const formattedBinary = binaryResult.substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + binaryResult.substring(4, 8);
-
             const dateResultElement = document.getElementById('dateResult');
             dateResultElement.innerHTML = `
                 今天是 ${month} 月 ${day} 日<br>
@@ -233,7 +299,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateDateResult();
-            resetAllTimers();
+            generateUnits(1);
         });
     </script>
 
