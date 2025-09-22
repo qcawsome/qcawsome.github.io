@@ -209,9 +209,15 @@
         
         // 日期計算和顯示功能
         function updateDateResult() {
+            // 取得 UTC 時間
             const now = new Date();
-            const month = now.getMonth() + 1;
-            const day = now.getDate();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            
+            // 轉換為台灣時間 (UTC+8)
+            const taiwanTime = new Date(utcTime + (8 * 3600000));
+
+            const month = taiwanTime.getMonth() + 1;
+            const day = taiwanTime.getDate();
             const result = (month + day) * 5;
 
             const binaryResult = (result >>> 0).toString(2).padStart(8, '0');
