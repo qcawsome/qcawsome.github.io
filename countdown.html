@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多組倒數計時器（提示音3秒後停止）</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 30px;
+            height: 100vh;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .main-controls {
+            margin-bottom: 20px;
+        }
+        .main-controls button {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            background-color: #007BFF;
+            transition: background-color 0.2s;
+        }
+        .main-controls button:hover {
+            background-color: #0056b3;
+        }
+        .timer-container {
+            text-align: center;
+            background: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 250px;
+        }
+        .timer {
+            font-size: 3em;
+            font-weight: bold;
+            color: #007BFF;
+            margin-bottom: 10px;
+        }
+        .label {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .controls button {
+            padding: 8px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            margin: 0 5px;
+            transition: background-color 0.2s;
+        }
+        .start-btn {
+            background-color: #28a745;
+        }
+        .start-btn:hover {
+            background-color: #218838;
+        }
+        .reset-btn {
+            background-color: #6c757d;
+        }
+        .reset-btn:hover {
+            background-color: #5a6268;
+        }
+        .finished {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-controls">
+        <button onclick="resetAllTimers()">全部重設</button>
+    </div>
+
+    <div class="timer-container">
+        <div id="timer1" class="timer"></div>
+        <div class="label">計時器 1 (2:25)</div>
+        <div class="controls">
+            <button class="start-btn" onclick="startTimer('timer1', 2, 25)">開始</button>
+            <button class="reset-btn" onclick="resetTimer('timer1', 2, 25)">重設</button>
+        </div>
+    </div>
+
+    <div class="timer-container">
+        <div id="timer2" class="timer"></div>
+        <div class="label">計時器 2 (1:18)</div>
+        <div class="controls">
+            <button class="start-btn" onclick="startTimer('timer2', 1, 18)">開始</button>
+            <button class="reset-btn" onclick="resetTimer('timer2', 1, 18)">重設</button>
+        </div>
+    </div>
+
+    <div class="timer-container">
+        <div id="timer3" class="timer"></div>
+        <div class="label">計時器 3 (2:35)</div>
+        <div class="controls">
+            <button class="start-btn" onclick="startTimer('timer3', 2, 35)">開始</button>
+            <button class="reset-btn" onclick="resetTimer('timer3', 2, 35)">重設</button>
+        </div>
+    </div>
+    
+    <audio id="alarmSound">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const timerIntervals = {};
+        const timers = [
+            { id: 'timer1', minutes: 2, seconds: 25 },
+            { id: 'timer2', minutes: 1, seconds: 18 },
+            { id: 'timer3', minutes: 2, seconds: 35 }
+        ];
+
+        const alarmSound = document.getElementById('alarmSound');
+        let soundTimeoutId = null; // 用來儲存計時器ID
+
+        function displayTime(elementId, minutes, seconds) {
+            const timerElement = document.getElementById(elementId);
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            timerElement.textContent = `${formattedMinutes}:${formattedSeconds}`;
+            timerElement.classList.remove('finished');
+        }
+
+        function playAlarm() {
+            // 先清除舊的停止計時器，避免重複執行
+            if (soundTimeoutId) {
+                clearTimeout(soundTimeoutId);
+            }
+            
+            // 播放提示音
+            alarmSound.play().catch(e => console.log('音訊播放失敗:', e));
+            
+            // 設定3秒後停止播放
+            soundTimeoutId = setTimeout(() => {
+                alarmSound.pause();
+                alarmSound.currentTime = 0; // 重置音訊到開頭
+            }, 3000); // 3000 毫秒 = 3 秒
+        }
+
+        function startTimer(elementId, initialMinutes, initialSeconds) {
+            clearInterval(timerIntervals[elementId]);
+
+            let totalSeconds = initialMinutes * 60 + initialSeconds;
+            const timerElement = document.getElementById(elementId);
+
+            function updateTimer() {
+                if (totalSeconds < 0) {
+                    clearInterval(timerIntervals[elementId]);
+                    timerElement.textContent = "00:00";
+                    timerElement.classList.add('finished');
+                    playAlarm();
+                    return;
+                }
+
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                displayTime(elementId, minutes, seconds);
+                totalSeconds--;
+            }
+
+            updateTimer();
+            timerIntervals[elementId] = setInterval(updateTimer, 1000);
+        }
+
+        function resetTimer(elementId, initialMinutes, initialSeconds) {
+            clearInterval(timerIntervals[elementId]);
+            displayTime(elementId, initialMinutes, initialSeconds);
+            // 停止正在播放的提示音並清除停止計時器
+            if (soundTimeoutId) {
+                clearTimeout(soundTimeoutId);
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+            }
+        }
+
+        function resetAllTimers() {
+            timers.forEach(timer => {
+                resetTimer(timer.id, timer.minutes, timer.seconds);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            resetAllTimers();
+        });
+    </script>
+
+</body>
+</html>
