@@ -179,10 +179,9 @@
             background-color: #333;
         }
 
-        /* 閃爍動畫效果 */
         @keyframes blink-red {
             0%, 100% { background-color: transparent; }
-            50% { background-color: rgba(220, 53, 69, 0.5); } /* 使用半透明紅色 */
+            50% { background-color: rgba(220, 53, 69, 0.5); }
         }
 
         .timer-container.blinking {
@@ -235,11 +234,13 @@
         const alarmSound = document.getElementById('alarmSound');
         let soundTimeoutId = null;
 
-        const timerPresets = [
+        // 預設計時器時間
+        const defaultTimerPresets = [
             { minutes: 2, seconds: 25 },
             { minutes: 1, seconds: 18 },
             { minutes: 2, seconds: 35 }
         ];
+        let timerPresets = [...defaultTimerPresets];
 
         function displayTime(elementId, minutes, seconds) {
             const timerElement = document.getElementById(elementId);
@@ -256,13 +257,11 @@
             
             alarmSound.play().catch(e => console.log('音訊播放失敗:', e));
             
-            // 新增閃爍效果
             timerContainer.classList.add('blinking');
             
             soundTimeoutId = setTimeout(() => {
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
-                // 停止閃爍效果
                 timerContainer.classList.remove('blinking');
             }, 3000);
         }
@@ -325,7 +324,7 @@
             timerElement.classList.remove('running', 'finished');
             
             const container = timerElement.closest('.timer-container');
-            container.classList.remove('blinking'); // 移除閃爍效果
+            container.classList.remove('blinking');
             if (soundTimeoutId) {
                 clearTimeout(soundTimeoutId);
                 alarmSound.pause();
@@ -407,12 +406,34 @@
             `;
         }
 
+        function parseUrlTimerParams() {
+            const hash = location.hash;
+            if (hash.startsWith('#timer=')) {
+                const paramString = hash.substring(7);
+                const params = paramString.split(',');
+                
+                params.forEach((param, index) => {
+                    if (index < timerPresets.length) {
+                        const timeParts = param.split(':');
+                        if (timeParts.length === 2) {
+                            const minutes = parseInt(timeParts[0]);
+                            const seconds = parseInt(timeParts[1]);
+                            if (!isNaN(minutes) && !isNaN(seconds)) {
+                                timerPresets[index] = { minutes, seconds };
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             updateDateResult();
+            parseUrlTimerParams();
             generateUnits(2);
         });
     </script>
