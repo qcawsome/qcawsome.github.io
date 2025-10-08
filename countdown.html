@@ -1,20 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W7WPCHL1Q6"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-    
-      gtag('config', 'G-W7WPCHL1Q6');
-    </script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8000752958889401"
-     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多組計時器</title>
+    <title>RO三王解碼計時器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -190,13 +179,14 @@
             background-color: #333;
         }
 
+        /* 閃爍動畫：持續 3 秒，然後停止 */
         @keyframes blink-red {
             0%, 100% { background-color: transparent; }
             50% { background-color: rgba(220, 53, 69, 0.5); }
         }
 
         .timer-container.blinking {
-            animation: blink-red 0.5s infinite;
+            animation: blink-red 0.5s 6; /* 0.5s * 6 次 = 3 秒 */
         }
     </style>
 </head>
@@ -239,20 +229,20 @@
     <audio id="alarmSound">
         <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
     </audio>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8000752958889401"
-     crossorigin="anonymous"></script>
+
     <script>
         const timerIntervals = {};
         const alarmSound = document.getElementById('alarmSound');
-        let soundTimeoutId = null;
-
-        // 預設計時器時間
+        
         const defaultTimerPresets = [
             { minutes: 2, seconds: 25 },
             { minutes: 1, seconds: 18 },
             { minutes: 2, seconds: 35 }
         ];
         let timerPresets = [...defaultTimerPresets];
+        
+        // 用來追蹤音效是否正在播放，防止重複呼叫 play()
+        let isSoundPlaying = false; 
 
         function displayTime(elementId, minutes, seconds) {
             const timerElement = document.getElementById(elementId);
@@ -262,20 +252,52 @@
             timerElement.classList.remove('finished');
         }
 
-        function playAlarm(timerContainer) {
-            if (soundTimeoutId) {
-                clearTimeout(soundTimeoutId);
-            }
-            
-            alarmSound.play().catch(e => console.log('音訊播放失敗:', e));
-            
-            timerContainer.classList.add('blinking');
-            
-            soundTimeoutId = setTimeout(() => {
+        // 停止音效的邏輯
+        function stopSound() {
+            if (isSoundPlaying) {
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
-                timerContainer.classList.remove('blinking');
-            }, 3000);
+                isSoundPlaying = false;
+            }
+        }
+
+        // 播放音效的邏輯 (只在沒有音效播放時啟動)
+        function playAlarm() {
+            if (!isSoundPlaying) {
+                // 每次播放前重設，確保從頭開始
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+                alarmSound.play().then(() => {
+                    isSoundPlaying = true;
+                }).catch(e => {
+                    console.log('音訊播放失敗 (可能被瀏覽器限制):', e);
+                    // 即使播放失敗，也標記為播放中，避免下一秒繼續嘗試播放，直到停止事件觸發。
+                    isSoundPlaying = true; 
+                });
+            }
+        }
+        
+        // 檢查頁面上是否有任何元素正在閃爍，並控制音效
+        function checkAndToggleSound() {
+            // 檢查整個 mainContainer 內是否有任何 .blinking 元素
+            const blinkingElements = document.querySelectorAll('#mainContainer .blinking');
+            
+            if (blinkingElements.length > 0) {
+                playAlarm(); // 有閃爍，播放音效
+            } else {
+                stopSound(); // 沒有閃爍，停止音效
+            }
+        }
+
+        // 處理動畫結束時停止音效
+        function handleAnimationEnd(event) {
+            if (event.animationName === 'blink-red') {
+                const container = event.target;
+                // 必須在這裡移除 blinking class，動畫才會停止
+                container.classList.remove('blinking'); 
+                // 檢查是否還有其他閃爍，以決定是否停止音效
+                checkAndToggleSound();
+            }
         }
 
         function startTimer(elementId) {
@@ -299,7 +321,11 @@
                     timerElement.textContent = "00:00";
                     timerElement.classList.remove('running');
                     timerElement.classList.add('finished');
-                    playAlarm(container);
+                    
+                    // 1. 開始閃爍
+                    container.classList.add('blinking');
+                    // 2. 檢查閃爍狀態，控制音效播放
+                    checkAndToggleSound();
 
                     const autoStart = document.getElementById('autoStartCheckbox').checked;
                     if (autoStart) {
@@ -336,12 +362,11 @@
             timerElement.classList.remove('running', 'finished');
             
             const container = timerElement.closest('.timer-container');
+            
+            // 1. 移除閃爍效果
             container.classList.remove('blinking');
-            if (soundTimeoutId) {
-                clearTimeout(soundTimeoutId);
-                alarmSound.pause();
-                alarmSound.currentTime = 0;
-            }
+            // 2. 檢查閃爍狀態，控制音效停止
+            checkAndToggleSound();
 
             container.querySelector('.start-btn').style.display = 'block';
             container.querySelector('.reset-btn').style.display = 'none';
@@ -370,8 +395,9 @@
                         <div class="timers-group">
                             ${timerPresets.map((preset, index) => {
                                 const timerId = `timer_${i}_${index + 1}`;
+                                // 新增 container_ID 以方便管理
                                 return `
-                                    <div class="timer-container">
+                                    <div class="timer-container" id="container_${timerId}">
                                         <div id="${timerId}" class="timer" 
                                             data-initial-minutes="${preset.minutes}" 
                                             data-initial-seconds="${preset.seconds}">
@@ -390,6 +416,12 @@
             }
             document.querySelectorAll('.group-container').forEach((group, index) => {
                 resetGroupTimers(index + 1);
+            });
+            // 為所有的 timer-container 註冊動畫結束事件監聽器
+            document.querySelectorAll('.timer-container').forEach(container => {
+                // 確保只添加一次監聽器
+                container.removeEventListener('animationend', handleAnimationEnd); 
+                container.addEventListener('animationend', handleAnimationEnd);
             });
         }
         
@@ -449,10 +481,6 @@
             generateUnits(2);
         });
     </script>
+
 </body>
 </html>
-
-
-
-
-
