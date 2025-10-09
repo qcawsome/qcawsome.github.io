@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <!-- Google tag (gtag.js) -->
+	<!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-W7WPCHL1Q6"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -190,7 +190,7 @@
             background-color: #333;
         }
 
-        /* 閃爍動畫：持續 3 秒，然後停止 */
+        /* 閃爍動畫 */
         @keyframes blink-red {
             0%, 100% { background-color: transparent; }
             50% { background-color: rgba(220, 53, 69, 0.5); }
@@ -198,6 +198,99 @@
 
         .timer-container.blinking {
             animation: blink-red 0.5s 6; /* 0.5s * 6 次 = 3 秒 */
+        }
+
+        /* --- 左下角資訊按鈕樣式 --- */
+        #cardInfoButton {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 12px 20px;
+            background-color: #007BFF; 
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s;
+            z-index: 2000; 
+        }
+        #cardInfoButton:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        
+        /* 聯絡資訊對話框樣式 */
+        .modal {
+            display: none; /* 預設隱藏 */
+            position: fixed;
+            z-index: 3000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* 居中 */
+            padding: 30px;
+            border: 1px solid #888;
+            width: 80%;
+            /* 移除 max-width，讓內容決定寬度 */
+            /* max-width: 600px; */ 
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: left;
+            font-size: 1.1em;
+            /* 設置最小寬度以保持合理佈局 */
+            min-width: 300px; 
+            max-width: 1600px; 
+        }
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .modal-content p {
+            margin: 5px 0;
+            white-space: pre-wrap; /* 確保內容保持預設換行 */
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        body.dark-mode .modal-content {
+            background-color: #3a3a3a;
+            color: #f4f4f4;
+            border: 1px solid #555;
+        }
+        body.dark-mode .modal-content h2 {
+             border-bottom: 2px solid #555;
+        }
+        /* 調整卡片資訊列表樣式 */
+        .card-list {
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+        .card-list strong {
+            display: inline-block;
+            width: 100px;
+            color: #28a745;
         }
     </style>
 </head>
@@ -241,6 +334,27 @@
         <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
     </audio>
 
+    <button id="cardInfoButton" onclick="showCardModal()">MVP怪物資訊</button>
+
+    <div id="cardInfoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="hideCardModal()">&times;</span>
+            <h2>MVP怪物資訊</h2>
+            <div class="card-list">
+                <p><strong>植物：</strong>嗒妮小姐 風3 大</p>
+                <p><strong>龍族：</strong>迪塔勒泰晤勒斯 暗3 大</p>
+                <p><strong>天使：</strong>蘭特克力斯 聖4 大</p>
+                <p><strong>不死：</strong>俄塞里斯 不死4 中、海盜之王 不死1 中</p>
+                <p><strong>昆蟲：</strong>蟻后 地4 大、黃金蟲 火2 大、蜂后 風4 小、女王甲蟲 地3 大</p>
+                <p><strong>人形：</strong>獸人英雄 地2 大、獸人酋長 地4 大、法老王 暗3 大、白素貞 風3 大、將軍大賢 地3 大</p>
+                <p><strong>動物：</strong>虎王 火1 大、皮里恩 無3 大、波伊塔塔 火3 大、卡崙 水4 大、水晶龍 水4 大、墨蛇君 念3 大、烏龜將軍 地2 大、阿特羅斯 暗3 大</p>
+                <p><strong>無形：</strong>冰暴騎士 風4 大、RSX-0806 地3 大、齊爾-D-01 暗2 中、幽暗夢魘 念3 大、亡靈的守護者卡德斯 暗3 大、伊夫利特 火4 大</p>
+                <p><strong>惡魔：</strong>德古拉男爵 暗4 大、死靈 暗3 中、月夜貓 火3 中、巴風特 暗3 大、讓特 暗2 大、死靈騎士 暗3 大、黑暗之王 不死4 大、魔劍士 達納托斯的記憶 念4 大、詛咒蠅王 念4 大</p>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         const timerIntervals = {};
         const alarmSound = document.getElementById('alarmSound');
@@ -252,7 +366,6 @@
         ];
         let timerPresets = [...defaultTimerPresets];
         
-        // 用來追蹤音效是否正在播放，防止重複呼叫 play()
         let isSoundPlaying = false; 
 
         function displayTime(elementId, minutes, seconds) {
@@ -263,7 +376,6 @@
             timerElement.classList.remove('finished');
         }
 
-        // 停止音效的邏輯
         function stopSound() {
             if (isSoundPlaying) {
                 alarmSound.pause();
@@ -272,41 +384,33 @@
             }
         }
 
-        // 播放音效的邏輯 (只在沒有音效播放時啟動)
         function playAlarm() {
             if (!isSoundPlaying) {
-                // 每次播放前重設，確保從頭開始
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
                 alarmSound.play().then(() => {
                     isSoundPlaying = true;
                 }).catch(e => {
                     console.log('音訊播放失敗 (可能被瀏覽器限制):', e);
-                    // 即使播放失敗，也標記為播放中，避免下一秒繼續嘗試播放，直到停止事件觸發。
                     isSoundPlaying = true; 
                 });
             }
         }
         
-        // 檢查頁面上是否有任何元素正在閃爍，並控制音效
         function checkAndToggleSound() {
-            // 檢查整個 mainContainer 內是否有任何 .blinking 元素
             const blinkingElements = document.querySelectorAll('#mainContainer .blinking');
             
             if (blinkingElements.length > 0) {
-                playAlarm(); // 有閃爍，播放音效
+                playAlarm(); 
             } else {
-                stopSound(); // 沒有閃爍，停止音效
+                stopSound(); 
             }
         }
 
-        // 處理動畫結束時停止音效
         function handleAnimationEnd(event) {
             if (event.animationName === 'blink-red') {
                 const container = event.target;
-                // 必須在這裡移除 blinking class，動畫才會停止
                 container.classList.remove('blinking'); 
-                // 檢查是否還有其他閃爍，以決定是否停止音效
                 checkAndToggleSound();
             }
         }
@@ -333,9 +437,7 @@
                     timerElement.classList.remove('running');
                     timerElement.classList.add('finished');
                     
-                    // 1. 開始閃爍
                     container.classList.add('blinking');
-                    // 2. 檢查閃爍狀態，控制音效播放
                     checkAndToggleSound();
 
                     const autoStart = document.getElementById('autoStartCheckbox').checked;
@@ -374,9 +476,7 @@
             
             const container = timerElement.closest('.timer-container');
             
-            // 1. 移除閃爍效果
             container.classList.remove('blinking');
-            // 2. 檢查閃爍狀態，控制音效停止
             checkAndToggleSound();
 
             container.querySelector('.start-btn').style.display = 'block';
@@ -406,7 +506,6 @@
                         <div class="timers-group">
                             ${timerPresets.map((preset, index) => {
                                 const timerId = `timer_${i}_${index + 1}`;
-                                // 新增 container_ID 以方便管理
                                 return `
                                     <div class="timer-container" id="container_${timerId}">
                                         <div id="${timerId}" class="timer" 
@@ -428,9 +527,7 @@
             document.querySelectorAll('.group-container').forEach((group, index) => {
                 resetGroupTimers(index + 1);
             });
-            // 為所有的 timer-container 註冊動畫結束事件監聽器
             document.querySelectorAll('.timer-container').forEach(container => {
-                // 確保只添加一次監聽器
                 container.removeEventListener('animationend', handleAnimationEnd); 
                 container.addEventListener('animationend', handleAnimationEnd);
             });
@@ -486,13 +583,29 @@
             document.body.classList.toggle('dark-mode');
         }
 
+        // --- 卡片資訊功能函式 ---
+        function showCardModal() {
+            document.getElementById('cardInfoModal').style.display = 'block';
+        }
+
+        function hideCardModal() {
+            document.getElementById('cardInfoModal').style.display = 'none';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateDateResult();
             parseUrlTimerParams();
             generateUnits(2);
+
+            // 點擊對話框外部關閉對話框
+            window.onclick = function(event) {
+                const modal = document.getElementById('cardInfoModal');
+                if (event.target === modal) {
+                    hideCardModal();
+                }
+            }
         });
     </script>
 
 </body>
 </html>
-
