@@ -53,10 +53,13 @@
             width: 100%;
             text-align: center;
             margin-top: 25px;
+            /* 隱藏原有的控制容器，因為設定已移入 Modal */
+            display: none; 
         }
         
-        .controls-container label, .controls-container select {
-            font-size: 1.1em;
+        /* 新增一個空的頂部空間，確保內容不會被固定頂部遮擋 */
+        .top-padding {
+            height: 50px; 
         }
 
         .date-display {
@@ -78,6 +81,26 @@
             background-color: #444;
             color: #f4f4f4;
             border-bottom: 1px solid #555;
+        }
+
+        /* 新增設定按鈕樣式 */
+        #settingsButton {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #ff9800; /* 橙色 */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            z-index: 1500; /* 位於日期之上 */
+            transition: background-color 0.2s;
+        }
+        #settingsButton:hover {
+            background-color: #e68900;
         }
         
         .main-container {
@@ -176,19 +199,6 @@
         .finished {
             color: #dc3545;
         }
-        #darkModeToggle {
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            color: #fff;
-            background-color: #555;
-            transition: background-color 0.2s;
-        }
-        #darkModeToggle:hover {
-            background-color: #333;
-        }
 
         /* 閃爍動畫 */
         @keyframes blink-red {
@@ -197,7 +207,10 @@
         }
 
         .timer-container.blinking {
-            animation: blink-red 0.5s 6; /* 0.5s * 6 次 = 3 秒 */
+            animation-name: blink-red;
+            animation-duration: 0.5s; 
+            animation-iteration-count: 6; 
+            animation-timing-function: linear;
         }
 
         /* --- 左下角資訊按鈕樣式 --- */
@@ -222,9 +235,9 @@
             transform: scale(1.05);
         }
         
-        /* 聯絡資訊對話框樣式 */
+        /* 模態對話框通用樣式 */
         .modal {
-            display: none; /* 預設隱藏 */
+            display: none; 
             position: fixed;
             z-index: 3000; 
             left: 0;
@@ -237,29 +250,16 @@
         }
         .modal-content {
             background-color: #fefefe;
-            margin: 10% auto; /* 居中 */
+            margin: 10% auto; 
             padding: 30px;
             border: 1px solid #888;
             width: 80%;
-            /* 移除 max-width，讓內容決定寬度 */
-            /* max-width: 600px; */ 
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             text-align: left;
             font-size: 1.1em;
-            /* 設置最小寬度以保持合理佈局 */
             min-width: 300px; 
-            max-width: 1600px; 
-        }
-        .modal-content h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-        .modal-content p {
-            margin: 5px 0;
-            white-space: pre-wrap; /* 確保內容保持預設換行 */
+            max-width: 800px; 
         }
         .close-btn {
             color: #aaa;
@@ -273,24 +273,86 @@
             text-decoration: none;
             cursor: pointer;
         }
-
         body.dark-mode .modal-content {
             background-color: #3a3a3a;
             color: #f4f4f4;
             border: 1px solid #555;
         }
-        body.dark-mode .modal-content h2 {
-             border-bottom: 2px solid #555;
+
+        /* 設定頁面專用樣式 */
+        .settings-form label, .settings-form select {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-        /* 調整卡片資訊列表樣式 */
-        .card-list {
-            line-height: 1.8;
-            padding-left: 20px;
+        .settings-form input[type="text"],
+        .settings-form input[type="number"],
+        .settings-form select,
+        .settings-form input[type="file"] {
+            width: 95%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1em;
         }
-        .card-list strong {
-            display: inline-block;
-            width: 100px;
-            color: #28a745;
+        
+        /* 針對 checkbox/radio 的容器樣式 */
+        .checkbox-group {
+             display: flex;
+             align-items: center;
+             gap: 10px;
+             margin-bottom: 15px;
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .settings-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .settings-actions button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #saveSettingsBtn {
+            background-color: #28a745;
+            color: white;
+        }
+        #resetSettingsBtn {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        /* 容器用於隱藏和顯示不同的音效輸入方式 */
+        .sound-input-group {
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none; 
+        }
+        .sound-input-group.active {
+            display: block;
+        }
+        .sound-input-group p {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        body.dark-mode .sound-input-group p {
+            color: #bbb;
         }
     </style>
 </head>
@@ -298,41 +360,14 @@
 
     <div id="dateResult" class="date-display"></div>
 
-    <div class="controls-container">
-        <button id="darkModeToggle" onclick="toggleDarkMode()">切換背景</button>
-        <label for="groupCount">群組數:</label>
-        <select id="groupCount" onchange="generateUnits(this.value)">
-            <option value="1">1</option>
-            <option value="2" selected>2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="15">15</option>
-            <option value="16">16</option>
-            <option value="17">17</option>
-            <option value="18">18</option>
-            <option value="19">19</option>
-            <option value="20">20</option>
-        </select>
-        <br>
-        <label for="autoStartCheckbox">自動連續倒數</label>
-        <input type="checkbox" id="autoStartCheckbox">
-    </div>
+    <button id="settingsButton" onclick="showSettingsModal()">設定</button>
+
+    <div class="controls-container"></div> 
 
     <div id="mainContainer" class="main-container"></div>
     
     <audio id="alarmSound">
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-    </audio>
+        </audio>
 
     <button id="cardInfoButton" onclick="showCardModal()">MVP怪物資訊</button>
 
@@ -353,17 +388,350 @@
             </div>
         </div>
     </div>
+    
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="hideSettingsModal()">&times;</span>
+            <h2>系統設定</h2>
+            <div class="settings-form">
+                
+                <label for="darkModeToggleSetting">背景主題</label>
+                <select id="darkModeToggleSetting">
+                    <option value="false">淺色模式</option>
+                    <option value="true">深色模式</option>
+                </select>
+
+                <label for="groupCountSetting">計時器群組數</label>
+                <select id="groupCountSetting">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                </select>
+                
+                <div class="checkbox-group">
+                    <label for="autoStartCheckboxSetting">自動連續倒數</label>
+                    <input type="checkbox" id="autoStartCheckboxSetting">
+                </div>
+                
+                <hr style="border-top: 1px solid #ccc; margin: 25px 0;">
+                <label for="soundSourceSelect">音效來源</label>
+                <select id="soundSourceSelect" onchange="toggleSoundInput()">
+                    <option value="url">輸入音效網址</option>
+                    <option value="local">選擇本地音效檔</option>
+                </select>
+                
+                <div id="urlInputGroup" class="sound-input-group active">
+                    <label for="soundUrlInput">音效網址 (MP3/OGG/WAV)</label>
+                    <input type="text" id="soundUrlInput" placeholder="輸入自定義音效的 URL">
+                </div>
+
+                <div id="localInputGroup" class="sound-input-group">
+                    <label for="localFileInput">選擇本地音效檔</label>
+                    <input type="file" id="localFileInput" accept="audio/*">
+                    <p>注意：本地音效會被儲存，因此**請勿選擇過大的檔案** (建議小於 4MB，受限於瀏覽器儲存空間)。</p>
+                </div>
+                
+                <label for="blinkDurationInput">閃爍提示秒數 (秒)</label>
+                <input type="number" id="blinkDurationInput" min="1" step="1" value="3">
+            </div>
+            
+            <div class="settings-actions">
+                <button id="resetSettingsBtn" onclick="resetDefaultSettings()">還原預設值</button>
+                <button id="saveSettingsBtn" onclick="saveSettings()">儲存設定</button>
+            </div>
+        </div>
+    </div>
 
 
     <script>
         const timerIntervals = {};
         const alarmSound = document.getElementById('alarmSound');
+        const mainContainer = document.getElementById('mainContainer');
+
+        // --- 設定預設值 ---
+        const DEFAULT_SETTINGS = {
+            darkMode: true, 
+            groupCount: 2, 
+            autoStart: false, 
+            soundSourceType: 'url', 
+            soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            localSoundBase64: null, 
+            blinkDuration: 3 
+        };
+        let currentSettings = { ...DEFAULT_SETTINGS };
+        let localSoundObjectURL = null; 
+        const BLINK_ANIMATION_DURATION = 0.5; 
+
+        // --- Base64 轉換工具 (保持不變) ---
+        function blobToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        function base64ToBlobUrl(base64Data) {
+            if (!base64Data || !base64Data.includes(',')) return null;
+            const parts = base64Data.split(',');
+            const mimeType = parts[0].match(/:(.*?);/)[1];
+            const base64 = parts[1];
+            const byteCharacters = atob(base64);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            const blob = new Blob(byteArrays, { type: mimeType });
+            if (localSoundObjectURL) URL.revokeObjectURL(localSoundObjectURL);
+            return URL.createObjectURL(blob);
+        }
         
+        // --- 設定管理函式 ---
+        function loadSettings() {
+            try {
+                const storedSettings = localStorage.getItem('timerSettings');
+                if (storedSettings) {
+                    const loaded = JSON.parse(storedSettings);
+                    currentSettings = { ...DEFAULT_SETTINGS, ...loaded };
+                } else {
+                    currentSettings = { ...DEFAULT_SETTINGS };
+                }
+            } catch (e) {
+                console.error("無法從 localStorage 載入設定，使用預設值。", e);
+                currentSettings = { ...DEFAULT_SETTINGS };
+            }
+            
+            // 初始化網頁時套用所有設定
+            applySettings();
+        }
+
+        function applySettings() {
+            // 1. 套用深淺色模式
+            if (currentSettings.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            
+            // 2. 重新生成群組
+            generateUnits(currentSettings.groupCount);
+
+            // 3. 套用音效來源
+            if (currentSettings.soundSourceType === 'local' && currentSettings.localSoundBase64) {
+                localSoundObjectURL = base64ToBlobUrl(currentSettings.localSoundBase64);
+                alarmSound.src = localSoundObjectURL;
+            } else if (currentSettings.soundSourceType === 'url') {
+                if (localSoundObjectURL) URL.revokeObjectURL(localSoundObjectURL);
+                localSoundObjectURL = null;
+                alarmSound.src = currentSettings.soundUrl;
+            } else {
+                 if (localSoundObjectURL) URL.revokeObjectURL(localSoundObjectURL);
+                 localSoundObjectURL = null;
+                 alarmSound.src = DEFAULT_SETTINGS.soundUrl;
+                 if (currentSettings.soundSourceType === 'local') {
+                     currentSettings.soundSourceType = 'url';
+                 }
+            }
+            alarmSound.load(); 
+
+            // 4. 更新閃爍動畫的重複次數
+            const iterationCount = Math.max(1, Math.ceil(currentSettings.blinkDuration / BLINK_ANIMATION_DURATION));
+            
+            const styleSheet = document.styleSheets[0];
+            let rule = null;
+
+            for (let i = 0; i < styleSheet.cssRules.length; i++) {
+                if (styleSheet.cssRules[i].selectorText === '.timer-container.blinking') {
+                    rule = styleSheet.cssRules[i];
+                    break;
+                }
+            }
+            
+            if (rule) {
+                rule.style.animation = `blink-red ${BLINK_ANIMATION_DURATION}s ${iterationCount} linear`;
+            } else {
+                 console.error("找不到 .timer-container.blinking CSS 規則，請檢查樣式表。");
+            }
+        }
+
+        async function saveSettings() {
+            const settingsModal = document.getElementById('settingsModal');
+            
+            // 獲取一般設定
+            const soundSourceType = document.getElementById('soundSourceSelect').value;
+            const newBlinkDuration = parseInt(document.getElementById('blinkDurationInput').value, 10);
+            
+            // 獲取新增的設定
+            const newDarkMode = document.getElementById('darkModeToggleSetting').value === 'true';
+            const newGroupCount = parseInt(document.getElementById('groupCountSetting').value, 10);
+            const newAutoStart = document.getElementById('autoStartCheckboxSetting').checked;
+            
+            // 更新 currentSettings
+            currentSettings.darkMode = newDarkMode;
+            currentSettings.groupCount = newGroupCount;
+            currentSettings.autoStart = newAutoStart;
+            currentSettings.soundSourceType = soundSourceType;
+            currentSettings.localSoundBase64 = null; 
+
+            // 處理音效設定
+            if (soundSourceType === 'url') {
+                const newSoundUrl = document.getElementById('soundUrlInput').value.trim();
+                if (newSoundUrl) {
+                    currentSettings.soundUrl = newSoundUrl;
+                }
+            } else if (soundSourceType === 'local') {
+                const fileInput = document.getElementById('localFileInput');
+                
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    if (file.size > 4 * 1024 * 1024) { 
+                         alert('檔案大小超過 4MB 限制，請選擇更小的音效檔。');
+                         return;
+                    }
+                    try {
+                        const base64Data = await blobToBase64(file);
+                        currentSettings.localSoundBase64 = base64Data;
+                    } catch (e) {
+                        alert('無法讀取音效檔內容，儲存失敗。');
+                        console.error('File read error:', e);
+                        return;
+                    }
+                } else if (currentSettings.soundSourceType === 'local' && !currentSettings.localSoundBase64) {
+                    // 如果用戶之前沒有存本地音效，且這次也沒有選，則阻止儲存
+                    alert('請選擇一個本地音效檔！');
+                    return; 
+                } else {
+                    // 保留舊的 Base64 數據
+                    const stored = JSON.parse(localStorage.getItem('timerSettings'));
+                    if (stored && stored.soundSourceType === 'local') {
+                         currentSettings.localSoundBase64 = stored.localSoundBase64;
+                    }
+                }
+            }
+            
+            if (!isNaN(newBlinkDuration) && newBlinkDuration >= 1) {
+                currentSettings.blinkDuration = newBlinkDuration;
+            }
+
+            try {
+                // 儲存所有設定到 Local Storage
+                localStorage.setItem('timerSettings', JSON.stringify({
+                    darkMode: currentSettings.darkMode,
+                    groupCount: currentSettings.groupCount,
+                    autoStart: currentSettings.autoStart,
+                    soundSourceType: currentSettings.soundSourceType,
+                    soundUrl: currentSettings.soundUrl,
+                    localSoundBase64: currentSettings.localSoundBase64,
+                    blinkDuration: currentSettings.blinkDuration
+                }));
+                
+                applySettings();
+                hideSettingsModal();
+                alert('設定已儲存並套用！');
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert('儲存失敗：瀏覽器儲存空間不足。請選擇更小的音效檔。');
+                } else {
+                    alert('儲存設定失敗，請檢查瀏覽器儲存權限。');
+                }
+            }
+        }
+        
+        function resetDefaultSettings() {
+            // 重置 currentSettings
+            currentSettings = { ...DEFAULT_SETTINGS };
+            
+            // 清理 UI 
+            document.getElementById('darkModeToggleSetting').value = DEFAULT_SETTINGS.darkMode.toString();
+            document.getElementById('groupCountSetting').value = DEFAULT_SETTINGS.groupCount;
+            document.getElementById('autoStartCheckboxSetting').checked = DEFAULT_SETTINGS.autoStart;
+            document.getElementById('soundSourceSelect').value = DEFAULT_SETTINGS.soundSourceType;
+            document.getElementById('soundUrlInput').value = DEFAULT_SETTINGS.soundUrl;
+            document.getElementById('blinkDurationInput').value = DEFAULT_SETTINGS.blinkDuration;
+            document.getElementById('localFileInput').value = ''; 
+            
+            toggleSoundInput(); 
+            
+            // 儲存預設值
+            localStorage.setItem('timerSettings', JSON.stringify(DEFAULT_SETTINGS));
+            
+            applySettings(); 
+            alert('設定已還原為預設值並儲存！');
+        }
+
+        function toggleSoundInput() {
+            const selectValue = document.getElementById('soundSourceSelect').value;
+            const urlGroup = document.getElementById('urlInputGroup');
+            const localGroup = document.getElementById('localInputGroup');
+            
+            if (selectValue === 'url') {
+                urlGroup.classList.add('active');
+                localGroup.classList.remove('active');
+            } else {
+                urlGroup.classList.remove('active');
+                localGroup.classList.add('active');
+            }
+        }
+
+        // --- 模態視窗處理函式 ---
+        function showSettingsModal() {
+            // 載入當前設定值到輸入框
+            document.getElementById('darkModeToggleSetting').value = currentSettings.darkMode.toString();
+            document.getElementById('groupCountSetting').value = currentSettings.groupCount;
+            document.getElementById('autoStartCheckboxSetting').checked = currentSettings.autoStart;
+            
+            document.getElementById('soundSourceSelect').value = currentSettings.soundSourceType;
+            document.getElementById('soundUrlInput').value = currentSettings.soundUrl;
+            document.getElementById('blinkDurationInput').value = currentSettings.blinkDuration;
+            document.getElementById('localFileInput').value = ''; 
+
+            toggleSoundInput(); 
+            
+            document.getElementById('settingsModal').style.display = 'block';
+        }
+
+        function hideSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function showCardModal() {
+            document.getElementById('cardInfoModal').style.display = 'block';
+        }
+
+        function hideCardModal() {
+            document.getElementById('cardInfoModal').style.display = 'none';
+        }
+
+
+        // --- 原有計時器與音效邏輯 (部分修改) ---
         const defaultTimerPresets = [
             { minutes: 2, seconds: 25 },
             { minutes: 1, seconds: 18 },
             { minutes: 2, seconds: 35 }
         ];
+        // timerPresets 現在是一個全局變量，用於儲存當前的計時器設定
         let timerPresets = [...defaultTimerPresets];
         
         let isSoundPlaying = false; 
@@ -386,12 +754,17 @@
 
         function playAlarm() {
             if (!isSoundPlaying) {
+                if (!alarmSound.src || alarmSound.readyState < 2) {
+                    console.log('音效尚未載入或來源無效，無法播放。');
+                    return; 
+                }
+                
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
                 alarmSound.play().then(() => {
                     isSoundPlaying = true;
                 }).catch(e => {
-                    console.log('音訊播放失敗 (可能被瀏覽器限制):', e);
+                    console.log('音訊播放失敗 (可能被瀏覽器限制或 URL 無效):', e);
                     isSoundPlaying = true; 
                 });
             }
@@ -440,8 +813,8 @@
                     container.classList.add('blinking');
                     checkAndToggleSound();
 
-                    const autoStart = document.getElementById('autoStartCheckbox').checked;
-                    if (autoStart) {
+                    // 使用 currentSettings 中的 autoStart
+                    if (currentSettings.autoStart) { 
                         const parts = elementId.split('_');
                         const groupIndex = parseInt(parts[1]);
                         const timerIndex = parseInt(parts[2]);
@@ -493,8 +866,8 @@
             }
         }
         
+        // 核心邏輯：根據設定的群組數生成 UI
         function generateUnits(count) {
-            const mainContainer = document.getElementById('mainContainer');
             mainContainer.innerHTML = '';
             
             for (let i = 1; i <= count; i++) {
@@ -511,6 +884,7 @@
                                         <div id="${timerId}" class="timer" 
                                             data-initial-minutes="${preset.minutes}" 
                                             data-initial-seconds="${preset.seconds}">
+                                            ${String(preset.minutes).padStart(2, '0')}:${String(preset.seconds).padStart(2, '0')}
                                         </div>
                                         <div class="controls">
                                             <button class="start-btn" onclick="startTimer('${timerId}')">開始</button>
@@ -558,50 +932,57 @@
             `;
         }
 
+        // URL 參數解析函式
         function parseUrlTimerParams() {
             const hash = location.hash;
             if (hash.startsWith('#timer=')) {
                 const paramString = hash.substring(7);
                 const params = paramString.split(',');
                 
-                params.forEach((param, index) => {
-                    if (index < timerPresets.length) {
-                        const timeParts = param.split(':');
-                        if (timeParts.length === 2) {
-                            const minutes = parseInt(timeParts[0]);
-                            const seconds = parseInt(timeParts[1]);
-                            if (!isNaN(minutes) && !isNaN(seconds)) {
-                                timerPresets[index] = { minutes, seconds };
-                            }
+                // 擴展 timerPresets 以容納 URL 參數指定的計時器數量（如果超過預設 3 個）
+                const newPresets = []; 
+                
+                params.forEach((param) => {
+                    const timeParts = param.split(':');
+                    if (timeParts.length === 2) {
+                        const minutes = parseInt(timeParts[0]);
+                        const seconds = parseInt(timeParts[1]);
+                        if (!isNaN(minutes) && !isNaN(seconds)) {
+                            newPresets.push({ minutes, seconds });
                         }
                     }
                 });
+
+                // 只有當 URL 參數有效時，才覆蓋 timerPresets
+                if (newPresets.length > 0) {
+                    timerPresets = newPresets;
+                }
             }
+            // 否則，timerPresets 保持為 defaultTimerPresets
         }
 
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-        }
-
-        // --- 卡片資訊功能函式 ---
-        function showCardModal() {
-            document.getElementById('cardInfoModal').style.display = 'block';
-        }
-
-        function hideCardModal() {
-            document.getElementById('cardInfoModal').style.display = 'none';
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateDateResult();
-            parseUrlTimerParams();
-            generateUnits(2);
+            
+            // 1. 優先解析 URL 參數，更新 timerPresets 陣列
+            parseUrlTimerParams(); 
 
+            // 2. 載入並套用所有設定 (包含深淺色、群組數，並呼叫 generateUnits)
+            // generateUnits 執行時，會使用步驟 1 更新後的 timerPresets 
+            loadSettings(); 
+            
+            // 3. 更新頂部的解碼資訊
+            updateDateResult();
+            
             // 點擊對話框外部關閉對話框
             window.onclick = function(event) {
-                const modal = document.getElementById('cardInfoModal');
-                if (event.target === modal) {
+                const cardModal = document.getElementById('cardInfoModal');
+                const settingsModal = document.getElementById('settingsModal');
+                if (event.target === cardModal) {
                     hideCardModal();
+                }
+                if (event.target === settingsModal) {
+                    hideSettingsModal();
                 }
             }
         });
@@ -609,5 +990,3 @@
 
 </body>
 </html>
-
-
