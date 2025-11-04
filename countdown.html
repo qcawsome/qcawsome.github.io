@@ -962,6 +962,39 @@
             // 否則，timerPresets 保持為 defaultTimerPresets
         }
 
+		// 計算並設定到下一個午夜 00:00 的定時器
+        function setDailyUpdateTimer() {
+            const now = new Date();
+            // 台灣時區偏移量為 +8 小時 (8 * 60 * 60 * 1000 毫秒)
+            const timezoneOffset = 8 * 3600000; 
+            
+            // 取得當前台灣時間
+            const currentTaiwanTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + timezoneOffset);
+
+            // 計算下一個午夜 00:00 的台灣時間
+            const nextMidnight = new Date(currentTaiwanTime);
+            nextMidnight.setDate(currentTaiwanTime.getDate() + 1);
+            nextMidnight.setHours(0, 0, 0, 0); 
+            
+            // 轉換回 UTC 毫秒，然後再減去時區偏移，得到目標本地時間的毫秒數
+            const nextMidnightLocalTime = nextMidnight.getTime() - (now.getTimezoneOffset() * 60000) - timezoneOffset;
+            
+            // 必須從當前的本地時間計算差值
+            const delay = nextMidnightLocalTime - now.getTime();
+
+            if (delay > 0) {
+                console.log(`設定每日更新計時器，將在 ${delay / 1000} 秒後執行更新。`);
+                setTimeout(() => {
+                    updateDateResult(); // 更新密碼
+                    setDailyUpdateTimer(); // 重新設定計時器給下一天
+                }, delay);
+            } else {
+                 // 如果延遲為負數 (理論上不應該)，則等待 1 秒後重試
+                 console.log("計算延遲錯誤，立即重試設定定時器。");
+                 setTimeout(setDailyUpdateTimer, 1000);
+            }
+        }
+
 
         document.addEventListener('DOMContentLoaded', () => {
             
@@ -974,6 +1007,9 @@
             
             // 3. 更新頂部的解碼資訊
             updateDateResult();
+
+			// 4. 設定換日自動更新計時器
+            setDailyUpdateTimer();
             
             // 點擊對話框外部關閉對話框
             window.onclick = function(event) {
@@ -991,4 +1027,5 @@
 
 </body>
 </html>
+
 
