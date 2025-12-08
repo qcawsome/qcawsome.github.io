@@ -1023,9 +1023,28 @@
                 }
             }
         });
+
+		document.addEventListener('keydown', function(event) {
+			// 檢查是否是 F5 鍵 (keyCode 116)
+			// 檢查是否是 Ctrl + R (keyCode 82, 通常用於快速重新整理)
+			if (event.keyCode === 116 || (event.ctrlKey && event.keyCode === 82)) {
+				
+				// 阻止預設的 F5 或 Ctrl+R 行為
+				event.preventDefault();
+
+				// **可選：** 彈出一個提示框確認
+				const confirmed = confirm("您確定要離開此頁面嗎？重新整理可能會遺失目前的倒數。");
+				if (confirmed) {
+				    window.location.reload(); // 如果使用者確認，則執行重新整理
+				} else {
+				     // 不執行任何操作，停留在原頁面
+				}
+			}
+		});
     </script>
 
 </body>
 </html>
+
 
 
