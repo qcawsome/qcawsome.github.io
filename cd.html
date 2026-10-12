@@ -21,14 +21,14 @@
             <!-- 人物篩選 -->
             <div class="flex items-center gap-2">
                 <label for="filterCharacter" class="text-sm text-slate-400">人物篩選：</label>
-                <select id="filterCharacter" class="bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                <select id="filterCharacter" onchange="renderAll()" class="bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
                     <option value="all">全部人物</option>
                 </select>
             </div>
             <!-- 副本篩選 -->
             <div class="flex items-center gap-2">
                 <label for="filterDungeon" class="text-sm text-slate-400">副本篩選：</label>
-                <select id="filterDungeon" class="bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                <select id="filterDungeon" onchange="renderAll()" class="bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
                     <option value="all">全部副本</option>
                 </select>
             </div>
@@ -535,7 +535,7 @@
             });
         }
 
-        // 渲染右側今日可打清單
+        // 渲染右側今日可打清單（同時受頂部人物與副本篩選連動）
         function renderTodayReadyList() {
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('todayDisplayStr').textContent = todayStr;
@@ -543,14 +543,20 @@
             const container = document.getElementById('todayReadyList');
             container.innerHTML = '';
 
-            const currentDateObj = new Date(todayStr + 'T00:00:00');
-            let readyCount = 0;
+            const selectedCharFilter = document.getElementById('filterCharacter').value;
+            const selectedDungFilter = document.getElementById('filterDungeon').value;
 
             // 僅檢查有通關紀錄的人物
             const activeCharacters = state.characters.filter(c => hasAnyRecord(c));
 
-            activeCharacters.forEach(char => {
-                state.dungeons.forEach(dungObj => {
+            const targetChars = selectedCharFilter === 'all' ? activeCharacters : (hasAnyRecord(selectedCharFilter) ? [selectedCharFilter] : []);
+            const targetDungs = selectedDungFilter === 'all' ? state.dungeons : state.dungeons.filter(d => d.name === selectedDungFilter);
+
+            const currentDateObj = new Date(todayStr + 'T00:00:00');
+            let readyCount = 0;
+
+            targetChars.forEach(char => {
+                targetDungs.forEach(dungObj => {
                     const recordKey = `${char}_${dungObj.name}`;
                     const lastClearDateStr = state.records[recordKey];
 
@@ -582,12 +588,9 @@
             });
 
             if (readyCount === 0) {
-                container.innerHTML = '<div class="text-center text-slate-500 text-xs py-8 italic">今天沒有可打的副本或尚無通關紀錄！</div>';
+                container.innerHTML = '<div class="text-center text-slate-500 text-xs py-8 italic">今天沒有符合條件可打的副本或尚無通關紀錄！</div>';
             }
         }
-
-        document.getElementById('filterCharacter').addEventListener('change', renderCalendar);
-        document.getElementById('filterDungeon').addEventListener('change', renderCalendar);
 
         renderAll();
     </script>
