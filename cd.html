@@ -36,10 +36,10 @@
     </header>
 
     <!-- 主要內容區 -->
-    <main class="flex-1 flex flex-col lg:flex-row p-4 gap-4 max-w-[1600px] w-full mx-auto">
+    <main class="flex-1 flex flex-col xl:flex-row p-4 gap-4 max-w-[1800px] w-full mx-auto">
         
         <!-- 左側管理欄 -->
-        <aside class="w-full lg:w-80 flex flex-col gap-4 shrink-0">
+        <aside class="w-full xl:w-80 flex flex-col gap-4 shrink-0">
             
             <!-- 人物管理 -->
             <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col gap-3 shadow-lg">
@@ -82,19 +82,19 @@
                 </h2>
                 <div class="flex flex-col gap-2">
                     <div>
-                        <label class="text-xs text-slate-400 block mb-1">選擇副本</label>
-                        <select id="recordDungeon" onchange="updateRecordCharacterOptions()" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs text-slate-400">選擇人物</label>
+                            <label class="text-[11px] text-indigo-300 flex items-center gap-1 cursor-pointer select-none">
+                                <input type="checkbox" id="filterRecordCharByDungeon" onchange="updateRecordCharacterOptions()" class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0"> 僅顯示曾打過此副本
+                            </label>
+                        </div>
+                        <select id="recordCharacter" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
                             <!-- 動態帶入 -->
                         </select>
                     </div>
-                    <!-- 新增勾選快速過濾有完成過該副本的人物 -->
-                    <div class="flex items-center gap-2 pt-0.5 pb-0.5">
-                        <input type="checkbox" id="filterCompletedCharCheckbox" onchange="updateRecordCharacterOptions()" class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 w-4 h-4 cursor-pointer">
-                        <label for="filterCompletedCharCheckbox" class="text-xs text-slate-300 cursor-pointer select-none">只顯示有完成過該副本的人物</label>
-                    </div>
                     <div>
-                        <label class="text-xs text-slate-400 block mb-1">選擇人物</label>
-                        <select id="recordCharacter" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                        <label class="text-xs text-slate-400 block mb-1">選擇副本</label>
+                        <select id="recordDungeon" onchange="updateRecordCharacterOptions()" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
                             <!-- 動態帶入 -->
                         </select>
                     </div>
@@ -111,7 +111,7 @@
         </aside>
 
         <!-- 中間萬年曆區域 -->
-        <section class="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col shadow-lg">
+        <section class="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col shadow-lg min-w-[500px]">
             <!-- 月份控制列 -->
             <div class="flex justify-between items-center mb-4">
                 <button onclick="changeMonth(-1)" class="bg-slate-700 hover:bg-slate-600 px-3.5 py-1.5 rounded text-sm transition">
@@ -143,6 +143,17 @@
             </div>
         </section>
 
+        <!-- 右側今日可打清單 -->
+        <aside class="w-full xl:w-80 bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col gap-3 shadow-lg shrink-0">
+            <h2 class="font-bold text-base flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-emerald-400"></i> 今日可打副本
+            </h2>
+            <p class="text-xs text-slate-400">列出今天（<span id="todayDisplayStr"></span>）狀態為「可打」的人物與副本，點擊完成即可記錄。</p>
+            <div id="todayReadyList" class="flex-1 overflow-y-auto flex flex-col gap-2 max-h-[600px] pr-1">
+                <!-- 動態產生 -->
+            </div>
+        </aside>
+
     </main>
 
     <!-- 批次匯入 Modal -->
@@ -160,29 +171,7 @@
         </div>
     </div>
 
-    <!-- 自定義訊息彈窗取代 alert -->
-    <div id="msgModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-xs flex flex-col gap-4 shadow-2xl text-center">
-            <p id="msgText" class="text-sm text-slate-200"></p>
-            <button onclick="closeMsgModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded text-sm font-medium transition w-full">確定</button>
-        </div>
-    </div>
-
     <script>
-        // 自定義安全訊息框
-        function showMessage(text) {
-            document.getElementById('msgText').textContent = text;
-            const modal = document.getElementById('msgModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeMsgModal() {
-            const modal = document.getElementById('msgModal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-        }
-
         // 資料結構與 LocalStorage 初始化
         let state = {
             characters: JSON.parse(localStorage.getItem('game_characters')) || ['角色1'],
@@ -209,13 +198,18 @@
         // 初始化日期選擇器預設值
         document.getElementById('recordDate').valueAsDate = new Date();
 
+        // 檢查某人物是否有任何通關紀錄
+        function hasAnyRecord(char) {
+            return Object.keys(state.records).some(key => key.startsWith(char + '_') && state.records[key]);
+        }
+
         // 人物管理
         function addCharacter() {
             const input = document.getElementById('newCharacterName');
             const name = input.value.trim();
             if (!name) return;
             if (state.characters.includes(name)) {
-                showMessage('該人物已存在！');
+                alert('該人物已存在！');
                 return;
             }
             state.characters.push(name);
@@ -260,7 +254,7 @@
             });
             closeBatchModal();
             saveData();
-            showMessage(`成功匯入 ${addedCount} 個新人物！`);
+            alert(`成功匯入 ${addedCount} 個新人物！`);
         }
 
         // 副本管理
@@ -272,11 +266,11 @@
 
             if (!name) return;
             if (state.dungeons.some(d => d.name === name)) {
-                showMessage('該副本名稱已存在！');
+                alert('該副本名稱已存在！');
                 return;
             }
             if (isNaN(cd) || cd < 1) {
-                showMessage('請輸入有效的 CD 天數！');
+                alert('請輸入有效的 CD 天數！');
                 return;
             }
 
@@ -305,14 +299,22 @@
             const date = document.getElementById('recordDate').value;
 
             if (!char || !dung || !date) {
-                showMessage('請完整選擇人物、副本與日期！');
+                alert('請完整選擇人物、副本與日期！');
                 return;
             }
 
             const key = `${char}_${dung}`;
             state.records[key] = date;
             saveData();
-            // showMessage('通關記錄已成功儲存！');
+            // alert('通關記錄已成功儲存！');
+        }
+
+        // 快捷完成指定人物副本（寫入今天日期）
+        function completeTodayRecord(char, dungeonName) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const key = `${char}_${dungeonName}`;
+            state.records[key] = todayStr;
+            saveData();
         }
 
         // 渲染介面
@@ -321,6 +323,7 @@
             renderDungeonUI();
             renderSelectOptions();
             renderCalendar();
+            renderTodayReadyList();
         }
 
         function renderCharacterUI() {
@@ -374,31 +377,27 @@
             if (state.dungeons.some(d => d.name === prevFilterDung)) filterDung.value = prevFilterDung;
             if (state.dungeons.some(d => d.name === prevRecordDung)) recordDung.value = prevRecordDung;
 
-            // 更新通關記錄器的人物選單
             updateRecordCharacterOptions();
         }
 
-        // 根據通關記錄器的副本選擇與勾選狀態，動態渲染「選擇人物」選單
         function updateRecordCharacterOptions() {
             const recordChar = document.getElementById('recordCharacter');
-            const recordDung = document.getElementById('recordDungeon');
-            const onlyCompleted = document.getElementById('filterCompletedCharCheckbox').checked;
-            const selectedDung = recordDung.value;
-            const prevRecordChar = recordChar.value;
+            const recordDung = document.getElementById('recordDungeon').value;
+            const onlyFiltered = document.getElementById('filterRecordCharByDungeon').checked;
 
+            const prevRecordChar = recordChar.value;
             recordChar.innerHTML = '';
 
             let availableChars = state.characters;
-
-            if (onlyCompleted && selectedDung) {
+            if (onlyFiltered && recordDung) {
                 availableChars = state.characters.filter(c => {
-                    const key = `${c}_${selectedDung}`;
+                    const key = `${c}_${recordDung}`;
                     return state.records[key] !== undefined && state.records[key] !== '';
                 });
             }
 
             if (availableChars.length === 0) {
-                recordChar.innerHTML = '<option value="" disabled selected>無符合的人物記錄</option>';
+                recordChar.innerHTML = '<option value="" disabled selected>無符合條件人物</option>';
                 return;
             }
 
@@ -447,7 +446,10 @@
             const selectedCharFilter = document.getElementById('filterCharacter').value;
             const selectedDungFilter = document.getElementById('filterDungeon').value;
 
-            const targetChars = selectedCharFilter === 'all' ? state.characters : [selectedCharFilter];
+            // 過濾掉沒有任何通關紀錄的人物
+            const activeCharacters = state.characters.filter(c => hasAnyRecord(c));
+
+            const targetChars = selectedCharFilter === 'all' ? activeCharacters : (hasAnyRecord(selectedCharFilter) ? [selectedCharFilter] : []);
             const targetDungs = selectedDungFilter === 'all' ? state.dungeons : state.dungeons.filter(d => d.name === selectedDungFilter);
 
             let cells = [];
@@ -501,6 +503,7 @@
                             const recordKey = `${char}_${dungObj.name}`;
                             const lastClearDateStr = state.records[recordKey];
 
+                            // 只有當該人物有該副本的通關紀錄時才參與萬年曆計算與顯示
                             if (lastClearDateStr) {
                                 const lastDateObj = new Date(lastClearDateStr + 'T00:00:00');
                                 const diffTime = currentDateObj - lastDateObj;
@@ -530,6 +533,57 @@
 
                 grid.appendChild(div);
             });
+        }
+
+        // 渲染右側今日可打清單
+        function renderTodayReadyList() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('todayDisplayStr').textContent = todayStr;
+
+            const container = document.getElementById('todayReadyList');
+            container.innerHTML = '';
+
+            const currentDateObj = new Date(todayStr + 'T00:00:00');
+            let readyCount = 0;
+
+            // 僅檢查有通關紀錄的人物
+            const activeCharacters = state.characters.filter(c => hasAnyRecord(c));
+
+            activeCharacters.forEach(char => {
+                state.dungeons.forEach(dungObj => {
+                    const recordKey = `${char}_${dungObj.name}`;
+                    const lastClearDateStr = state.records[recordKey];
+
+                    // 必須要有通關紀錄且已過 CD 才能在今日可打清單呈現
+                    if (lastClearDateStr) {
+                        const lastDateObj = new Date(lastClearDateStr + 'T00:00:00');
+                        const diffTime = currentDateObj - lastDateObj;
+                        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays >= 0) {
+                            const daysRemaining = dungObj.cd - diffDays;
+                            if (daysRemaining <= 0) {
+                                readyCount++;
+                                container.innerHTML += `
+                                    <div class="flex justify-between items-center bg-slate-900/80 border border-emerald-700/40 rounded-lg p-2.5 text-sm">
+                                        <div class="flex flex-col truncate mr-2">
+                                            <span class="font-bold text-slate-200 truncate">${char}</span>
+                                            <span class="text-xs text-indigo-300 truncate">${dungObj.name} <span class="text-slate-400">(CD:${dungObj.cd}天)</span></span>
+                                        </div>
+                                        <button onclick="completeTodayRecord('${char}', '${dungObj.name}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1.5 rounded font-medium transition shrink-0 flex items-center gap-1">
+                                            <i class="fa-solid fa-check"></i> 完成
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }
+                });
+            });
+
+            if (readyCount === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 text-xs py-8 italic">今天沒有可打的副本或尚無通關紀錄！</div>';
+            }
         }
 
         document.getElementById('filterCharacter').addEventListener('change', renderCalendar);
