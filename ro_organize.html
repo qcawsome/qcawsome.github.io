@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RO組隊指令產生器</title>
+    <!-- 引入 Tailwind CSS 進行現代化樣式排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Inter 字型與動畫效果 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-gray-100 to-zinc-200 min-h-screen flex items-center justify-center p-4">
+
+    <!-- 主容器卡片 -->
+    <main class="w-full max-w-md bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-white/40 text-center transition-all duration-300">
+        
+        <!-- 標題與說明 -->
+        <div class="mb-8">
+            <span class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-emerald-600 bg-emerald-100 rounded-full tracking-wider">
+                快速剪貼簿工具
+            </span>
+            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">整理指令產生器</h1>
+            <p class="text-sm text-gray-500 mt-2">點擊下方按鈕即可立即複製帶有精確時間戳記的指令</p>
+        </div>
+
+        <!-- 畫面中央的大按鈕 -->
+        <div class="relative flex flex-col items-center justify-center my-6">
+            <button id="copyBtn" onclick="generateAndCopyText()" 
+                class="group relative w-full py-5 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-emerald-500/25 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-3 overflow-hidden cursor-pointer">
+                
+                <!-- 按鈕圖示 (剪貼簿SVG) -->
+                <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                
+                <!-- 按鈕文字 -->
+                <span id="btnText">產生並複製指令</span>
+            </button>
+        </div>
+
+        <!-- 複製內容確認區塊 -->
+        <div class="mt-8 pt-6 border-t border-gray-100 text-left">
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">最近產生的內容：</label>
+            <div class="relative flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 group">
+                <code id="resultDisplay" class="text-sm font-mono text-gray-700 break-all select-all flex-1">尚無內容，請點擊上方按鈕</code>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 邏輯腳本 -->
+    <script>
+        /**
+         * 產生格式化日期時間毫秒字串，並複製到剪貼簿
+         */
+        function generateAndCopyText() {
+            const now = new Date();
+
+            // 取得年、月、日、時、分、秒、毫秒
+            const yyyy = now.getFullYear();
+            const MM = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            
+            // 取得毫秒並補滿 3 位數
+            const sss = String(now.getMilliseconds()).padStart(3, '0');
+
+            // 組合完整格式字串
+            const textToCopy = `/organize ${yyyy}${MM}${dd}${hh}${mm}${ss}.${sss}`;
+
+            // 執行複製到剪貼簿 (相容性最佳化寫法)
+            copyTextToClipboard(textToCopy);
+
+            // 更新畫面確認區塊
+            const resultDisplay = document.getElementById('resultDisplay');
+            resultDisplay.textContent = textToCopy;
+            resultDisplay.classList.remove('text-gray-400');
+            resultDisplay.classList.add('text-emerald-700', 'font-semibold');
+
+            // 觸發按鈕視覺回饋動畫
+            triggerSuccessFeedback();
+        }
+
+        /**
+         * 跨瀏覽器、安全的剪貼簿複製函式
+         */
+        function copyTextToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(err => {
+                    console.error('API 複製失敗，嘗試備用方案:', err);
+                    fallbackCopyText(text);
+                });
+            } else {
+                fallbackCopyText(text);
+            }
+        }
+
+        /**
+         * 備用複製方案 (使用傳統 document.execCommand 支援 iframe 或舊環境)
+         */
+        function fallbackCopyText(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";  // 避免滾動頁面
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('無法複製文字', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        /**
+         * 按鈕點擊成功後的動態回饋效果
+         */
+        function triggerSuccessFeedback() {
+            const btn = document.getElementById('copyBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+
+            // 改變按鈕樣式 (由綠色轉為深灰色成功色系)
+            btn.classList.remove('from-emerald-500', 'to-teal-600', 'hover:from-emerald-600', 'hover:to-teal-700');
+            btn.classList.add('from-slate-800', 'to-gray-900', 'scale-98');
+
+            // 變更圖示為打勾圖示
+            btnIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />';
+            btnText.textContent = '已成功複製！';
+
+            // 1.8秒後恢復原狀
+            setTimeout(() => {
+                btn.classList.add('from-emerald-500', 'to-teal-600', 'hover:from-emerald-600', 'hover:to-teal-700');
+                btn.classList.remove('from-slate-800', 'to-gray-900', 'scale-98');
+                
+                btnIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />';
+                btnText.textContent = '產生並複製指令';
+            }, 1800);
+        }
+    </script>
+</body>
+</html>
