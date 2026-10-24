@@ -479,7 +479,7 @@
 
         <div id="characterSelectBox" class="form-group" style="display: none;">
           <label>選擇微調人物</label>
-          <select id="cfgCharTarget" class="form-control" onchange="loadSelectedCharSteps()">
+          <select id="cfgCharTarget" class="form-control" onchange="onCharSelectChange()">
             <!-- Dynamic options -->
           </select>
         </div>
@@ -509,35 +509,37 @@
     let config = {
       columns: 5,
       count: 15,
-      flashSec: 5, // Default flashing duration for finish prompt
+      flashSec: 5,
       sound: 'beep',
       defaultSteps: [
         { time: 145, label: '1王' },
         { time: 78,  label: '2王' },
         { time: 155, label: '3王' },
         { time: 70,  label: '回家' }
-      ]
+      ],
+      customCharSteps: {} // Stores per-character custom stage lists: { charId: [ {time, label}, ... ] }
     };
 
     let activeTab = 'global'; // 'global' or 'individual'
     let selectedCharId = 1;
-    let editingSteps = []; // Temporary array for modal editing
+    let editingSteps = []; // Temporary array for current modal editing view
 
     let groups = [];
     let audioCtx = null;
 
     // Load persisted settings from localStorage
     function loadStorage() {
-      const savedConfig = localStorage.getItem('timer_app_config_v5');
+      const savedConfig = localStorage.getItem('timer_app_config_v6');
       if (savedConfig) {
         try {
           config = JSON.parse(savedConfig);
+          if (!config.customCharSteps) config.customCharSteps = {};
         } catch (e) { console.error('Failed to parse saved config', e); }
       }
     }
 
     function saveStorage() {
-      localStorage.setItem('timer_app_config_v5', JSON.stringify(config));
+      localStorage.setItem('timer_app_config_v6', JSON.stringify(config));
     }
 
     function applyColumns() {
@@ -549,8 +551,12 @@
     function initGroups() {
       groups = [];
       for (let i = 1; i <= config.count; i++) {
-        // Clone default steps or preserve custom if existed
-        const steps = config.defaultSteps.map(s => ({ ...s }));
+        // Use custom character steps if defined, otherwise clone default steps
+        const custom = config.customCharSteps[i];
+        const steps = (custom && custom.length > 0)
+          ? custom.map(s => ({ ...s }))
+          : config.defaultSteps.map(s => ({ ...s }));
+
         groups.push({
           id: i,
           name: `人物 ${i}`,
@@ -1011,6 +1017,11 @@
     }
 
     function switchSettingTab(tab) {
+      // Save current input before switching view
+      if (activeTab === 'individual') {
+        saveCurrentEditingToChar(selectedCharId);
+      }
+
       activeTab = tab;
       document.getElementById('tabGlobal').classList.toggle('active', tab === 'global');
       document.getElementById('tabIndividual').classList.toggle('active', tab === 'individual');
@@ -1030,13 +1041,33 @@
       renderStepInputs();
     }
 
-    function loadSelectedCharSteps() {
+    function onCharSelectChange() {
+      // Save previous character inputs before switching to newly selected character
+      if (activeTab === 'individual') {
+        saveCurrentEditingToChar(selectedCharId);
+      }
       selectedCharId = parseInt(document.getElementById('cfgCharTarget').value) || 1;
-      const g = groups.find(x => x.id === selectedCharId);
-      if (g) {
-        editingSteps = g.steps.map(s => ({ ...s }));
+      document.getElementById('stepSettingTitle').textContent = `人物 ${selectedCharId} 獨立階段設定`;
+      loadSelectedCharSteps();
+    }
+
+    function loadSelectedCharSteps() {
+      const custom = config.customCharSteps[selectedCharId];
+      if (custom && custom.length > 0) {
+        editingSteps = custom.map(s => ({ ...s }));
+      } else {
+        // Fallback to character's current group steps or global defaults
+        const g = groups.find(x => x.id === selectedCharId);
+        editingSteps = (g && g.steps) ? g.steps.map(s => ({ ...s })) : config.defaultSteps.map(s => ({ ...s }));
       }
       renderStepInputs();
+    }
+
+    function saveCurrentEditingToChar(charId) {
+      const inputs = readStepInputsFromDOM();
+      if (inputs.length > 0) {
+        config.customCharSteps[charId] = inputs.map(s => ({ ...s }));
+      }
     }
 
     function renderStepInputs() {
@@ -1081,16 +1112,13 @@
     }
 
     function applyGlobalToAllChars() {
-      editingSteps = readStepInputsFromDOM();
-      if (editingSteps.length === 0) return;
+      const inputs = readStepInputsFromDOM();
+      if (inputs.length === 0) return;
 
-      groups.forEach(g => {
-        g.steps = editingSteps.map(s => ({ ...s }));
-        if (g.currentStepIndex >= g.steps.length) g.currentStepIndex = 0;
-        g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-        g.state = 'idle';
-      });
+      config.defaultSteps = inputs.map(s => ({ ...s }));
+      config.customCharSteps = {}; // Clear individual overrides
 
+      initGroups();
       alert('已將目前的階段配置套用到所有人物！');
     }
 
@@ -1115,11 +1143,9 @@
           { time: 70,  label: '回家' }
         ];
       } else {
-        const g = groups.find(x => x.id === selectedCharId);
-        if (g) {
-          g.steps = currentInputs.map(s => ({ ...s }));
-          if (g.currentStepIndex >= g.steps.length) g.currentStepIndex = 0;
-          g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+        // Save current editing steps for selected character
+        if (currentInputs.length > 0) {
+          config.customCharSteps[selectedCharId] = currentInputs.map(s => ({ ...s }));
         }
       }
 
