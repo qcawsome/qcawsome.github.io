@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多人物獨立倒數計時器</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: rgba(30, 41, 59, 0.75);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --accent: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding: 12px;
+    }
+
+    /* Header styling */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .binary-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .binary-value {
+      font-family: monospace;
+      font-weight: bold;
+      color: #38bdf8;
+      font-size: 1.15rem;
+      letter-spacing: 1.5px;
+    }
+
+    .binary-formula {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--panel-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning); border-color: var(--warning); color: #000; }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+
+    /* Grid Layout with Configurable Columns */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-cols, 5), 1fr);
+      gap: 10px;
+      flex: 1;
+    }
+
+    @media (max-width: 1200px) {
+      .grid-container {
+        grid-template-columns: repeat(min(var(--grid-cols, 5), 3), 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .grid-container {
+        grid-template-columns: repeat(min(var(--grid-cols, 5), 2), 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: normal;
+    }
+    .badge-idle { background: #475569; color: #cbd5e1; }
+    .badge-running { background: var(--primary); color: #fff; }
+    .badge-paused { background: var(--warning); color: #000; }
+    .badge-finished { background: var(--success); color: #fff; }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .timer-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .time-display {
+      font-size: 1.5rem;
+      font-family: monospace;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+
+    .step-info {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      transition: width 0.1s linear;
+    }
+
+    .progress-fill.done {
+      background: var(--success);
+    }
+
+    /* Stages Completion Blocks Grid */
+    .stages-blocks {
+      display: flex;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .stage-block {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      transition: background 0.2s ease;
+    }
+
+    .stage-block.completed {
+      background: var(--success);
+    }
+
+    .stage-block.current {
+      background: var(--primary);
+    }
+
+    /* Stage Finish Flashing Banner Alert Space */
+    .flash-alert-container {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2px 0;
+    }
+
+    .flash-alert-text {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #facc15;
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+      display: none;
+      animation: flashAnim 0.6s infinite alternate ease-in-out;
+    }
+
+    @keyframes flashAnim {
+      0% { opacity: 0.2; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1.06); }
+    }
+
+    /* Primary main action container */
+    .main-action-container {
+      width: 100%;
+    }
+
+    .main-action-container .btn {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Secondary Navigation Controls Bar */
+    .card-secondary-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .card-secondary-controls .btn {
+      flex: 1;
+      padding: 3px 4px;
+      font-size: 0.72rem;
+    }
+
+    .auto-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      user-select: none;
+      margin-top: 2px;
+    }
+
+    /* Modal styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #1e293b;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      width: 94%;
+      max-width: 650px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .form-control {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .step-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .step-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-row span {
+      font-size: 0.8rem;
+      width: 55px;
+      color: var(--text-sub);
+    }
+
+    .modal-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .nav-tab {
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="binary-box">
+      <div class="binary-value" id="binaryResult">00000000</div>
+      <div class="binary-formula" id="binaryFormula">台灣時間: (月+日)*5 2進位</div>
+    </div>
+    <div class="header-controls">
+      <button class="btn btn-primary" onclick="startAll()"><i class="fa-solid fa-play"></i> 全部開始</button>
+      <button class="btn btn-warning" onclick="pauseAll()"><i class="fa-solid fa-pause"></i> 全部暫停</button>
+      <button class="btn" onclick="resetAllCurrentStage()"><i class="fa-solid fa-rotate-left"></i> 重設本階段</button>
+      <button class="btn btn-accent" onclick="openSettings()"><i class="fa-solid fa-gear"></i> 設定</button>
+    </div>
+  </header>
+
+  <main class="grid-container" id="gridContainer">
+    <!-- Character Cards persistent DOM structure created once -->
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders"></i> 設定與倒數階段配置</h3>
+        <button class="btn btn-sm" onclick="closeSettings()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 12px;">
+          <div class="form-group" style="flex: 1;">
+            <label>版面欄數 (Columns)</label>
+            <input type="number" id="cfgColumns" class="form-control" min="1" max="10" value="5">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label>人物卡片呈現數量</label>
+            <input type="number" id="cfgCount" class="form-control" min="1" max="30" value="15">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label>提示閃爍時間 (秒)</label>
+            <input type="number" id="cfgFlashSec" class="form-control" min="1" max="30" value="5">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>提示音類型</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="cfgSound" class="form-control" style="flex: 1;">
+              <option value="beep">Beep 高頻嗶聲</option>
+              <option value="chime">Chime 和諧聲</option>
+              <option value="bell">Bell 鈴聲</option>
+              <option value="buzz">Buzz 低沉提示</option>
+            </select>
+            <button class="btn" onclick="testSound()"><i class="fa-solid fa-volume-high"></i> 測試聲音</button>
+          </div>
+        </div>
+
+        <!-- Settings Scope Tabs: Global Default vs Per Character -->
+        <div class="form-group">
+          <label>階段設定對象</label>
+          <div class="nav-tabs">
+            <div class="nav-tab active" id="tabGlobal" onclick="switchSettingTab('global')">全域基準設定 (預設)</div>
+            <div class="nav-tab" id="tabIndividual" onclick="switchSettingTab('individual')">個別人物獨立微調</div>
+          </div>
+        </div>
+
+        <div id="characterSelectBox" class="form-group" style="display: none;">
+          <label>選擇微調人物</label>
+          <select id="cfgCharTarget" class="form-control" onchange="loadSelectedCharSteps()">
+            <!-- Dynamic options -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label id="stepSettingTitle">倒數階段時間 (秒) 與完成提示文字</label>
+          <div class="step-inputs" id="stepInputs">
+            <!-- Dynamic step input fields -->
+          </div>
+          <button class="btn btn-sm" style="margin-top: 6px; align-self: flex-start;" onclick="addStepInput()">
+            <i class="fa-solid fa-plus"></i> 增加階段
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-warning btn-sm" onclick="applyGlobalToAllChars()"><i class="fa-solid fa-arrows-rotate"></i> 套用基準設定至所有人物</button>
+        <div>
+          <button class="btn" onclick="closeSettings()">取消</button>
+          <button class="btn btn-primary" onclick="saveSettings()">儲存變更</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Application State ---
+    let config = {
+      columns: 5,
+      count: 15,
+      flashSec: 5, // Default flashing duration for finish prompt
+      sound: 'beep',
+      defaultSteps: [
+        { time: 145, label: '1王' },
+        { time: 78,  label: '2王' },
+        { time: 155, label: '3王' },
+        { time: 70,  label: '回家' }
+      ]
+    };
+
+    let activeTab = 'global'; // 'global' or 'individual'
+    let selectedCharId = 1;
+    let editingSteps = []; // Temporary array for modal editing
+
+    let groups = [];
+    let audioCtx = null;
+
+    // Load persisted settings from localStorage
+    function loadStorage() {
+      const savedConfig = localStorage.getItem('timer_app_config_v5');
+      if (savedConfig) {
+        try {
+          config = JSON.parse(savedConfig);
+        } catch (e) { console.error('Failed to parse saved config', e); }
+      }
+    }
+
+    function saveStorage() {
+      localStorage.setItem('timer_app_config_v5', JSON.stringify(config));
+    }
+
+    function applyColumns() {
+      const cols = config.columns || 5;
+      document.getElementById('gridContainer').style.setProperty('--grid-cols', cols);
+    }
+
+    // Initialize Group State
+    function initGroups() {
+      groups = [];
+      for (let i = 1; i <= config.count; i++) {
+        // Clone default steps or preserve custom if existed
+        const steps = config.defaultSteps.map(s => ({ ...s }));
+        groups.push({
+          id: i,
+          name: `人物 ${i}`,
+          steps: steps,
+          currentStepIndex: 0,
+          completedStagesCount: 0,
+          remaining: steps[0]?.time || 10,
+          state: 'idle', // 'idle', 'running', 'paused', 'finished'
+          autoContinue: false,
+          lastTick: null,
+          alertPlayed: false,
+          flashEndTimestamp: 0,
+          flashText: ''
+        });
+      }
+      applyColumns();
+      buildDOMCards();
+    }
+
+    // --- Persistent DOM Construction ---
+    function buildDOMCards() {
+      const container = document.getElementById('gridContainer');
+      container.innerHTML = '';
+
+      groups.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `card-${g.id}`;
+
+        let blocksHtml = '';
+        for (let s = 0; s < g.steps.length; s++) {
+          blocksHtml += `<div class="stage-block" id="block-${g.id}-${s}"></div>`;
+        }
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-user-ninja"></i>
+              <span>${g.name}</span>
+            </div>
+            <span class="status-badge badge-idle" id="badge-${g.id}">靜止</span>
+          </div>
+          <div class="card-body">
+            <div class="timer-info">
+              <div class="time-display" id="time-${g.id}">${formatTime(g.remaining)}</div>
+              <div class="step-info" id="step-${g.id}">階段 1 / ${g.steps.length}</div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="progress-${g.id}"></div>
+            </div>
+
+            <!-- Stages Completed Color Blocks Indicator -->
+            <div class="stages-blocks" id="stages-blocks-${g.id}">
+              ${blocksHtml}
+            </div>
+
+            <!-- Center Flashing Stage Complete Alert Space -->
+            <div class="flash-alert-container">
+              <span class="flash-alert-text" id="flash-${g.id}"></span>
+            </div>
+
+            <!-- Single Main Contextual Action Button Slot -->
+            <div class="main-action-container">
+              <button class="btn btn-primary" id="btn-start-${g.id}"><i class="fa-solid fa-play"></i> 開始</button>
+              <button class="btn btn-warning" id="btn-pause-${g.id}" style="display:none;"><i class="fa-solid fa-pause"></i> 暫停</button>
+              <button class="btn btn-success" id="btn-continue-${g.id}" style="display:none;"><i class="fa-solid fa-forward"></i> 繼續下一階段</button>
+            </div>
+
+            <!-- Secondary Navigation Controls Bar -->
+            <div class="card-secondary-controls">
+              <button class="btn btn-sm" id="btn-prev-${g.id}"><i class="fa-solid fa-backward-step"></i> 上一階段</button>
+              <button class="btn btn-sm" id="btn-next-${g.id}"><i class="fa-solid fa-forward-step"></i> 下一階段</button>
+              <button class="btn btn-sm btn-danger" id="btn-reset-${g.id}"><i class="fa-solid fa-rotate-left"></i> 重設本階段</button>
+            </div>
+
+            <label class="auto-toggle">
+              <input type="checkbox" id="auto-${g.id}">
+              自動進行下一階段
+            </label>
+          </div>
+        `;
+
+        container.appendChild(card);
+
+        document.getElementById(`btn-start-${g.id}`).onclick = () => startCard(g.id);
+        document.getElementById(`btn-pause-${g.id}`).onclick = () => pauseCard(g.id);
+        document.getElementById(`btn-continue-${g.id}`).onclick = () => continueCard(g.id);
+        document.getElementById(`btn-prev-${g.id}`).onclick = () => prevStepCard(g.id);
+        document.getElementById(`btn-next-${g.id}`).onclick = () => nextStepCard(g.id);
+        document.getElementById(`btn-reset-${g.id}`).onclick = () => resetCurrentStageCard(g.id);
+
+        const autoCb = document.getElementById(`auto-${g.id}`);
+        autoCb.checked = g.autoContinue;
+        autoCb.onchange = (e) => { g.autoContinue = e.target.checked; };
+      });
+
+      updateDOMInPlace(performance.now());
+    }
+
+    // --- In-Place DOM Updates ---
+    function updateDOMInPlace(now) {
+      groups.forEach(g => {
+        const curStep = g.steps[g.currentStepIndex] || { time: 10, label: '' };
+        const totalDuration = curStep.time || 1;
+        const pct = Math.max(0, Math.min(100, ((totalDuration - g.remaining) / totalDuration) * 100));
+
+        // Time display
+        const timeEl = document.getElementById(`time-${g.id}`);
+        if (timeEl) timeEl.textContent = formatTime(g.remaining);
+
+        // Step display
+        const stepEl = document.getElementById(`step-${g.id}`);
+        if (stepEl) stepEl.textContent = `階段 ${g.currentStepIndex + 1} (${curStep.label || '無名稱'}) / ${g.steps.length}`;
+
+        // Progress bar width
+        const progEl = document.getElementById(`progress-${g.id}`);
+        if (progEl) {
+          progEl.style.width = `${pct}%`;
+          if (g.state === 'finished') {
+            progEl.classList.add('done');
+          } else {
+            progEl.classList.remove('done');
+          }
+        }
+
+        // Color Blocks Indicator
+        for (let s = 0; s < g.steps.length; s++) {
+          const blockEl = document.getElementById(`block-${g.id}-${s}`);
+          if (blockEl) {
+            blockEl.className = 'stage-block';
+            if (s < g.completedStagesCount) {
+              blockEl.classList.add('completed');
+            } else if (s === g.currentStepIndex && g.state === 'running') {
+              blockEl.classList.add('current');
+            }
+          }
+        }
+
+        // Flashing Alert Prompt Display Logic
+        const flashEl = document.getElementById(`flash-${g.id}`);
+        if (flashEl) {
+          if (now < g.flashEndTimestamp) {
+            flashEl.textContent = `⚠️ ${g.flashText} 倒數完成！`;
+            flashEl.style.display = 'inline-block';
+          } else {
+            flashEl.style.display = 'none';
+          }
+        }
+
+        // Status Badge
+        const badgeEl = document.getElementById(`badge-${g.id}`);
+        if (badgeEl) {
+          badgeEl.className = 'status-badge ' + (
+            g.state === 'running' ? 'badge-running' :
+            g.state === 'paused' ? 'badge-paused' :
+            g.state === 'finished' ? 'badge-finished' : 'badge-idle'
+          );
+          badgeEl.textContent = (
+            g.state === 'running' ? '倒數中' :
+            g.state === 'paused' ? '已暫停' :
+            g.state === 'finished' ? '已完成' : '靜止'
+          );
+        }
+
+        // Main Action Buttons Toggle
+        const btnStart = document.getElementById(`btn-start-${g.id}`);
+        const btnPause = document.getElementById(`btn-pause-${g.id}`);
+        const btnContinue = document.getElementById(`btn-continue-${g.id}`);
+
+        if (btnStart && btnPause && btnContinue) {
+          if (g.state === 'running') {
+            btnStart.style.display = 'none';
+            btnPause.style.display = 'inline-flex';
+            btnContinue.style.display = 'none';
+          } else if (g.state === 'finished') {
+            btnStart.style.display = 'none';
+            btnPause.style.display = 'none';
+            btnContinue.style.display = 'inline-flex';
+          } else {
+            btnStart.style.display = 'inline-flex';
+            btnPause.style.display = 'none';
+            btnContinue.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    // --- Action Handlers ---
+    function startCard(id) {
+      initAudio();
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+
+      if (g.state === 'finished') {
+        g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+      }
+
+      g.state = 'running';
+      g.lastTick = performance.now();
+      g.alertPlayed = false;
+      updateDOMInPlace(performance.now());
+    }
+
+    function pauseCard(id) {
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+
+      if (g.state === 'running') {
+        g.state = 'paused';
+        g.lastTick = null;
+        updateDOMInPlace(performance.now());
+      }
+    }
+
+    function prevStepCard(id) {
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+
+      if (g.currentStepIndex > 0) {
+        g.currentStepIndex--;
+        if (g.completedStagesCount > g.currentStepIndex) {
+          g.completedStagesCount = g.currentStepIndex;
+        }
+      }
+      g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+      g.state = 'idle';
+      g.lastTick = null;
+      g.alertPlayed = false;
+      updateDOMInPlace(performance.now());
+    }
+
+    function nextStepCard(id) {
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+
+      if (g.currentStepIndex >= g.completedStagesCount) {
+        g.completedStagesCount = g.currentStepIndex + 1;
+      }
+
+      if (g.currentStepIndex < g.steps.length - 1) {
+        g.currentStepIndex++;
+      } else {
+        g.currentStepIndex = 0;
+        g.completedStagesCount = 0;
+      }
+      g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+      g.state = 'idle';
+      g.lastTick = null;
+      g.alertPlayed = false;
+      updateDOMInPlace(performance.now());
+    }
+
+    function continueCard(id) {
+      initAudio();
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+
+      if (g.currentStepIndex >= g.completedStagesCount) {
+        g.completedStagesCount = g.currentStepIndex + 1;
+      }
+
+      if (g.currentStepIndex < g.steps.length - 1) {
+        g.currentStepIndex++;
+        g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+        g.state = 'running';
+        g.lastTick = performance.now();
+      } else {
+        g.currentStepIndex = 0;
+        g.completedStagesCount = 0;
+        g.remaining = g.steps[0]?.time || 10;
+        g.state = 'idle';
+        g.lastTick = null;
+      }
+      g.alertPlayed = false;
+      updateDOMInPlace(performance.now());
+    }
+
+    function resetCurrentStageCard(id) {
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+
+      g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+      g.state = 'idle';
+      g.lastTick = null;
+      g.alertPlayed = false;
+      updateDOMInPlace(performance.now());
+    }
+
+    // --- Global Controls ---
+    function startAll() {
+      groups.forEach(g => startCard(g.id));
+    }
+
+    function pauseAll() {
+      groups.forEach(g => pauseCard(g.id));
+    }
+
+    function resetAllCurrentStage() {
+      groups.forEach(g => resetCurrentStageCard(g.id));
+    }
+
+    // --- Animation Loop ---
+    function timerLoop(now) {
+      groups.forEach(g => {
+        if (g.state === 'running') {
+          if (!g.lastTick) g.lastTick = now;
+          const dt = (now - g.lastTick) / 1000;
+          g.lastTick = now;
+
+          g.remaining -= dt;
+
+          if (g.remaining <= 0) {
+            g.remaining = 0;
+
+            const curStepLabel = g.steps[g.currentStepIndex]?.label || `階段 ${g.currentStepIndex + 1}`;
+
+            if (!g.alertPlayed) {
+              playAlertSound();
+              g.alertPlayed = true;
+
+              // Trigger flashing prompt banner
+              const flashMs = (config.flashSec || 5) * 1000;
+              g.flashEndTimestamp = now + flashMs;
+              g.flashText = curStepLabel;
+            }
+
+            if (g.currentStepIndex >= g.completedStagesCount) {
+              g.completedStagesCount = g.currentStepIndex + 1;
+            }
+
+            if (g.autoContinue) {
+              if (g.currentStepIndex < g.steps.length - 1) {
+                g.currentStepIndex++;
+                g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+                g.alertPlayed = false;
+              } else {
+                g.state = 'finished';
+                g.lastTick = null;
+              }
+            } else {
+              g.state = 'finished';
+              g.lastTick = null;
+            }
+          }
+        }
+      });
+
+      updateDOMInPlace(now);
+      requestAnimationFrame(timerLoop);
+    }
+
+    // --- Taiwan Time Binary Calculation ---
+    function updateTaiwanTimeBinary() {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const twDate = new Date(utc + (3600000 * 8));
+
+      const month = twDate.getMonth() + 1;
+      const day = twDate.getDate();
+
+      const calcValue = (month + day) * 5;
+      const binaryStr = calcValue.toString(2).padStart(8, '0');
+
+      document.getElementById('binaryResult').textContent = binaryStr;
+      document.getElementById('binaryFormula').textContent = `台灣時間: (${month}月 + ${day}日) × 5 = ${calcValue} [2進位]`;
+    }
+
+    function formatTime(sec) {
+      sec = Math.max(0, Math.ceil(sec));
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // --- Web Audio API Alert Synthesizer ---
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playAlertSound() {
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const type = config.sound || 'beep';
+      const now = audioCtx.currentTime;
+
+      if (type === 'beep') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      } else if (type === 'chime') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.15);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc.start(now);
+        osc.stop(now + 0.6);
+      } else if (type === 'bell') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, now);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        osc.start(now);
+        osc.stop(now + 0.8);
+      } else if (type === 'buzz') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      }
+    }
+
+    function testSound() {
+      initAudio();
+      config.sound = document.getElementById('cfgSound').value;
+      playAlertSound();
+    }
+
+    // --- Settings Modal Handlers ---
+    function openSettings() {
+      document.getElementById('cfgColumns').value = config.columns || 5;
+      document.getElementById('cfgCount').value = config.count;
+      document.getElementById('cfgFlashSec').value = config.flashSec || 5;
+      document.getElementById('cfgSound').value = config.sound;
+
+      // Populate Character Target Select Option
+      const charSelect = document.getElementById('cfgCharTarget');
+      charSelect.innerHTML = '';
+      groups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = g.name;
+        charSelect.appendChild(opt);
+      });
+
+      switchSettingTab('global');
+      document.getElementById('settingsModal').classList.add('active');
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    function switchSettingTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabGlobal').classList.toggle('active', tab === 'global');
+      document.getElementById('tabIndividual').classList.toggle('active', tab === 'individual');
+
+      const selectBox = document.getElementById('characterSelectBox');
+      selectBox.style.display = tab === 'individual' ? 'flex' : 'none';
+
+      if (tab === 'global') {
+        document.getElementById('stepSettingTitle').textContent = '全域預設階段時間 (秒) 與完成提示名稱';
+        editingSteps = config.defaultSteps.map(s => ({ ...s }));
+      } else {
+        selectedCharId = parseInt(document.getElementById('cfgCharTarget').value) || 1;
+        document.getElementById('stepSettingTitle').textContent = `人物 ${selectedCharId} 獨立階段設定`;
+        loadSelectedCharSteps();
+        return;
+      }
+      renderStepInputs();
+    }
+
+    function loadSelectedCharSteps() {
+      selectedCharId = parseInt(document.getElementById('cfgCharTarget').value) || 1;
+      const g = groups.find(x => x.id === selectedCharId);
+      if (g) {
+        editingSteps = g.steps.map(s => ({ ...s }));
+      }
+      renderStepInputs();
+    }
+
+    function renderStepInputs() {
+      const container = document.getElementById('stepInputs');
+      container.innerHTML = '';
+      editingSteps.forEach((s, idx) => {
+        const row = document.createElement('div');
+        row.className = 'step-row';
+        row.innerHTML = `
+          <span>第 ${idx + 1} 階段:</span>
+          <input type="text" class="form-control step-lbl" value="${s.label || ''}" placeholder="提示名稱(如:1王)" style="flex: 1;">
+          <input type="number" class="form-control step-val" value="${s.time || 10}" min="1" placeholder="秒數" style="width: 90px;">
+          <button class="btn btn-sm btn-danger" onclick="removeStepInput(${idx})"><i class="fa-solid fa-trash"></i></button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function readStepInputsFromDOM() {
+      const labels = document.querySelectorAll('.step-lbl');
+      const times = document.querySelectorAll('.step-val');
+      const result = [];
+      labels.forEach((lblEl, idx) => {
+        const timeVal = Math.max(1, parseInt(times[idx]?.value) || 10);
+        const labelVal = lblEl.value.trim() || `階段 ${idx + 1}`;
+        result.push({ time: timeVal, label: labelVal });
+      });
+      return result;
+    }
+
+    function addStepInput() {
+      editingSteps = readStepInputsFromDOM();
+      editingSteps.push({ time: 60, label: `階段 ${editingSteps.length + 1}` });
+      renderStepInputs();
+    }
+
+    function removeStepInput(idx) {
+      editingSteps = readStepInputsFromDOM();
+      if (editingSteps.length <= 1) return;
+      editingSteps.splice(idx, 1);
+      renderStepInputs();
+    }
+
+    function applyGlobalToAllChars() {
+      editingSteps = readStepInputsFromDOM();
+      if (editingSteps.length === 0) return;
+
+      groups.forEach(g => {
+        g.steps = editingSteps.map(s => ({ ...s }));
+        if (g.currentStepIndex >= g.steps.length) g.currentStepIndex = 0;
+        g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+        g.state = 'idle';
+      });
+
+      alert('已將目前的階段配置套用到所有人物！');
+    }
+
+    function saveSettings() {
+      const newCols = parseInt(document.getElementById('cfgColumns').value) || 5;
+      const newCount = parseInt(document.getElementById('cfgCount').value) || 15;
+      const newFlashSec = parseInt(document.getElementById('cfgFlashSec').value) || 5;
+      const newSound = document.getElementById('cfgSound').value;
+
+      const currentInputs = readStepInputsFromDOM();
+
+      config.columns = Math.max(1, Math.min(10, newCols));
+      config.count = Math.max(1, newCount);
+      config.flashSec = Math.max(1, Math.min(30, newFlashSec));
+      config.sound = newSound;
+
+      if (activeTab === 'global') {
+        config.defaultSteps = currentInputs.length > 0 ? currentInputs : [
+          { time: 145, label: '1王' },
+          { time: 78,  label: '2王' },
+          { time: 155, label: '3王' },
+          { time: 70,  label: '回家' }
+        ];
+      } else {
+        const g = groups.find(x => x.id === selectedCharId);
+        if (g) {
+          g.steps = currentInputs.map(s => ({ ...s }));
+          if (g.currentStepIndex >= g.steps.length) g.currentStepIndex = 0;
+          g.remaining = g.steps[g.currentStepIndex]?.time || 10;
+        }
+      }
+
+      saveStorage();
+      initGroups();
+      closeSettings();
+    }
+
+    // App Initializer
+    window.onload = () => {
+      loadStorage();
+      initGroups();
+      updateTaiwanTimeBinary();
+      setInterval(updateTaiwanTimeBinary, 1000);
+      requestAnimationFrame(timerLoop);
+    };
+  </script>
+</body>
+</html>
