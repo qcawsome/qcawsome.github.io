@@ -83,6 +83,26 @@
             border-bottom: 1px solid #555;
         }
 
+        /* 最左上角新版頁面按鈕樣式 */
+        #newVersionButton {
+            position: fixed;
+            top: 15px;
+            left: 20px;
+            padding: 10px 15px;
+            background-color: #28a745; /* 綠色 */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            z-index: 1500; /* 位於頂部日期條之上 */
+            transition: background-color 0.2s;
+        }
+        #newVersionButton:hover {
+            background-color: #218838;
+        }
+
         /* 新增設定按鈕樣式 */
         #settingsButton {
             position: fixed;
@@ -359,6 +379,9 @@
 <body class="dark-mode">
 
     <div id="dateResult" class="date-display"></div>
+
+    <!-- 左上角新增跳轉到新版頁面的按鈕 -->
+    <button id="newVersionButton" onclick="window.location.href='https://qcawsome.github.io/new-countdown.html'">新版頁面</button>
 
     <button id="settingsButton" onclick="showSettingsModal()">設定</button>
 
@@ -954,7 +977,7 @@
                     }
                 });
 
-                // 只有當 URL 參數有效時，才覆蓋 timerPresets
+                // 知識庫: 只有當 URL 參數有效時，才覆蓋 timerPresets
                 if (newPresets.length > 0) {
                     timerPresets = newPresets;
                 }
@@ -1045,6 +1068,3 @@
 
 </body>
 </html>
-
-
-
