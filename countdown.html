@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- Google tag (gtag.js) -->
+	<!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-W7WPCHL1Q6"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -12,1180 +12,1059 @@
     </script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8000752958889401"
      crossorigin="anonymous"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>多人物獨立倒數計時器</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --bg-dark: #0f172a;
-      --panel-bg: rgba(30, 41, 59, 0.75);
-      --panel-border: rgba(255, 255, 255, 0.12);
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --accent: #8b5cf6;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RO三王解碼計時器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px; 
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding-top: 75px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background-color: #2c2c2c;
+            color: #f4f4f4;
+        }
+        
+        body.dark-mode .date-display,
+        body.dark-mode .timer-container {
+            background-color: #444;
+            color: #f4f4f4;
+            border-bottom: 1px solid #555;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
+        body.dark-mode .group-container {
+            background: #3a3a3a;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
 
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      padding: 12px;
-    }
+        .controls-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 25px;
+            /* 隱藏原有的控制容器，因為設定已移入 Modal */
+            display: none; 
+        }
+        
+        /* 新增一個空的頂部空間，確保內容不會被固定頂部遮擋 */
+        .top-padding {
+            height: 50px; 
+        }
 
-    /* Header styling */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 16px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      margin-bottom: 12px;
-    }
+        .date-display {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: #fff;
+            color: #333;
+            font-size: 1.2em;
+            padding: 15px 0;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode .date-display {
+            background-color: #444;
+            color: #f4f4f4;
+            border-bottom: 1px solid #555;
+        }
 
-    .binary-box {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+        /* 最左上角新版頁面按鈕樣式 */
+        #newVersionButton {
+            position: fixed;
+            top: 15px;
+            left: 20px;
+            padding: 10px 15px;
+            background-color: #28a745; /* 綠色 */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            z-index: 1500; /* 位於頂部日期條之上 */
+            transition: background-color 0.2s;
+        }
+        #newVersionButton:hover {
+            background-color: #218838;
+        }
 
-    .binary-value {
-      font-family: monospace;
-      font-weight: bold;
-      color: #38bdf8;
-      font-size: 1.15rem;
-      letter-spacing: 1.5px;
-    }
+        /* 新增設定按鈕樣式 */
+        #settingsButton {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #ff9800; /* 橙色 */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            z-index: 1500; /* 位於日期之上 */
+            transition: background-color 0.2s;
+        }
+        #settingsButton:hover {
+            background-color: #e68900;
+        }
+        
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 50px; 
+            width: 100%;
+        }
+        .group-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            flex: 0 0 calc(20% - 40px);
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .group-controls {
+            margin-top: 10px;
+            width: 100%;
+        }
+        .group-controls button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            background-color: #007BFF;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+        .group-controls button:hover {
+            background-color: #0056b3;
+        }
+        .timers-group {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%; 
+        }
+        .timer-container {
+            text-align: center;
+            background: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .timer {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #007BFF;
+            margin-bottom: 10px;
+        }
+        .timer.running {
+            color: #28a745;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            flex: 1;
+            transition: background-color 0.2s;
+        }
+        .start-btn {
+            background-color: #28a745;
+        }
+        .start-btn:hover {
+            background-color: #218838;
+        }
+        .reset-btn {
+            background-color: #6c757d;
+            display: none;
+        }
+        .reset-btn:hover {
+            background-color: #5a6268;
+        }
+        .finished {
+            color: #dc3545;
+        }
 
-    .binary-formula {
-      font-size: 0.75rem;
-      color: var(--text-sub);
-    }
+        /* 閃爍動畫 */
+        @keyframes blink-red {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(220, 53, 69, 0.5); }
+        }
 
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+        .timer-container.blinking {
+            animation-name: blink-red;
+            animation-duration: 0.5s; 
+            animation-iteration-count: 6; 
+            animation-timing-function: linear;
+        }
 
-    .btn {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-main);
-      border: 1px solid var(--panel-border);
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      user-select: none;
-    }
+        /* --- 左下角資訊按鈕樣式 --- */
+        #cardInfoButton {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 12px 20px;
+            background-color: #007BFF; 
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s;
+            z-index: 2000; 
+        }
+        #cardInfoButton:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        
+        /* 模態對話框通用樣式 */
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 3000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 30px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: left;
+            font-size: 1.1em;
+            min-width: 300px; 
+            max-width: 800px; 
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        body.dark-mode .modal-content {
+            background-color: #3a3a3a;
+            color: #f4f4f4;
+            border: 1px solid #555;
+        }
 
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-    }
+        /* 設定頁面專用樣式 */
+        .settings-form label, .settings-form select {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .settings-form input[type="text"],
+        .settings-form input[type="number"],
+        .settings-form select,
+        .settings-form input[type="file"] {
+            width: 95%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        
+        /* 針對 checkbox/radio 的容器樣式 */
+        .checkbox-group {
+             display: flex;
+             align-items: center;
+             gap: 10px;
+             margin-bottom: 15px;
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
 
-    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-hover); }
+        .settings-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .settings-actions button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #saveSettingsBtn {
+            background-color: #28a745;
+            color: white;
+        }
+        #resetSettingsBtn {
+            background-color: #ffc107;
+            color: #333;
+        }
 
-    .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
-    .btn-warning { background: var(--warning); border-color: var(--warning); color: #000; }
-    .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-    .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-    .btn-sm {
-      padding: 4px 8px;
-      font-size: 0.75rem;
-    }
-
-    /* Grid Layout with Configurable Columns */
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(var(--grid-cols, 5), 1fr);
-      gap: 10px;
-      flex: 1;
-    }
-
-    @media (max-width: 1200px) {
-      .grid-container {
-        grid-template-columns: repeat(min(var(--grid-cols, 5), 3), 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .grid-container {
-        grid-template-columns: repeat(min(var(--grid-cols, 5), 2), 1fr);
-      }
-    }
-
-    @media (max-width: 480px) {
-      .grid-container {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .card {
-      background: var(--panel-bg);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-      position: relative;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-badge {
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: normal;
-    }
-    .badge-idle { background: #475569; color: #cbd5e1; }
-    .badge-running { background: var(--primary); color: #fff; }
-    .badge-paused { background: var(--warning); color: #000; }
-    .badge-finished { background: var(--success); color: #fff; }
-
-    .card-body {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .timer-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .time-display {
-      font-size: 1.5rem;
-      font-family: monospace;
-      font-weight: bold;
-      color: #38bdf8;
-    }
-
-    .step-info {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-    }
-
-    /* Progress bar */
-    .progress-track {
-      width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #3b82f6, #60a5fa);
-      transition: width 0.1s linear;
-    }
-
-    .progress-fill.done {
-      background: var(--success);
-    }
-
-    /* Stages Completion Blocks Grid */
-    .stages-blocks {
-      display: flex;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    .stage-block {
-      flex: 1;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
-      transition: background 0.2s ease;
-    }
-
-    .stage-block.completed {
-      background: var(--success);
-    }
-
-    .stage-block.current {
-      background: var(--primary);
-    }
-
-    /* Stage Finish Flashing Banner Alert Space */
-    .flash-alert-container {
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 2px 0;
-    }
-
-    .flash-alert-text {
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: #facc15;
-      text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
-      display: none;
-      animation: flashAnim 0.6s infinite alternate ease-in-out;
-    }
-
-    @keyframes flashAnim {
-      0% { opacity: 0.2; transform: scale(0.96); }
-      100% { opacity: 1; transform: scale(1.06); }
-    }
-
-    /* Primary main action container */
-    .main-action-container {
-      width: 100%;
-    }
-
-    .main-action-container .btn {
-      width: 100%;
-      padding: 6px 10px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    /* Secondary Navigation Controls Bar */
-    .card-secondary-controls {
-      display: flex;
-      gap: 4px;
-    }
-
-    .card-secondary-controls .btn {
-      flex: 1;
-      padding: 3px 4px;
-      font-size: 0.72rem;
-    }
-
-    .auto-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      color: var(--text-sub);
-      cursor: pointer;
-      user-select: none;
-      margin-top: 2px;
-    }
-
-    /* Modal styling */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-content {
-      background: #1e293b;
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      width: 94%;
-      max-width: 650px;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--panel-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-body {
-      padding: 18px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-group label {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-    }
-
-    .form-control {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-
-    .step-inputs {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .step-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .step-row span {
-      font-size: 0.8rem;
-      width: 55px;
-      color: var(--text-sub);
-    }
-
-    .modal-footer {
-      padding: 12px 18px;
-      border-top: 1px solid var(--panel-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .nav-tabs {
-      display: flex;
-      gap: 6px;
-      border-bottom: 1px solid var(--panel-border);
-      padding-bottom: 8px;
-      margin-bottom: 8px;
-    }
-
-    .nav-tab {
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .nav-tab.active {
-      background: var(--primary);
-      color: #fff;
-    }
-  </style>
+        /* 容器用於隱藏和顯示不同的音效輸入方式 */
+        .sound-input-group {
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none; 
+        }
+        .sound-input-group.active {
+            display: block;
+        }
+        .sound-input-group p {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        body.dark-mode .sound-input-group p {
+            color: #bbb;
+        }
+    </style>
 </head>
-<body>
+<body class="dark-mode">
 
-  <header>
-    <div class="binary-box">
-      <div class="binary-value" id="binaryResult">00000000</div>
-	  <div class="binary-value" id="binaryResult2"></div>
-      <!--div class="binary-formula" id="binaryFormula">台灣時間: (月+日)*5 2進位</div-->
+    <div id="dateResult" class="date-display"></div>
+
+    <!-- 左上角新增跳轉到新版頁面的按鈕 -->
+    <button id="newVersionButton" onclick="window.location.href='https://qcawsome.github.io/new-countdown.html'">新版頁面</button>
+
+    <button id="settingsButton" onclick="showSettingsModal()">設定</button>
+
+    <div class="controls-container"></div> 
+
+    <div id="mainContainer" class="main-container"></div>
+    
+    <audio id="alarmSound">
+        </audio>
+
+    <button id="cardInfoButton" onclick="showCardModal()">MVP怪物資訊</button>
+
+    <div id="cardInfoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="hideCardModal()">&times;</span>
+            <h2>MVP怪物資訊</h2>
+            <div class="card-list">
+                <p><strong>植物：</strong>嗒妮小姐 風3 大</p>
+                <p><strong>龍族：</strong>迪塔勒泰晤勒斯 暗3 大</p>
+                <p><strong>天使：</strong>蘭特克力斯 聖4 大</p>
+                <p><strong>不死：</strong>俄塞里斯 不死4 中、海盜之王 不死1 中</p>
+                <p><strong>昆蟲：</strong>蟻后 地4 大、黃金蟲 火2 大、蜂后 風4 小、女王甲蟲 地3 大</p>
+                <p><strong>人形：</strong>獸人英雄 地2 大、獸人酋長 地4 大、法老王 暗3 大、白素貞 風3 大、將軍大賢 地3 大</p>
+                <p><strong>動物：</strong>虎王 火1 大、皮里恩 無3 大、波伊塔塔 火3 大、卡崙 水4 大、水晶龍 水4 大、墨蛇君 念3 大、烏龜將軍 地2 大、阿特羅斯 暗3 大</p>
+                <p><strong>無形：</strong>冰暴騎士 風4 大、RSX-0806 地3 大、齊爾-D-01 暗2 中、幽暗夢魘 念3 大、亡靈的守護者卡德斯 暗3 大、伊夫利特 火4 大</p>
+                <p><strong>惡魔：</strong>德古拉男爵 暗4 大、死靈 暗3 中、月夜貓 火3 中、巴風特 暗3 大、讓特 暗2 大、死靈騎士 暗3 大、黑暗之王 不死4 大、魔劍士 達納托斯的記憶 念4 大、詛咒蠅王 念4 大</p>
+				<p><strong>活動追加：</strong>喬伊亞 無形 風4 大、死亡女巫 人形 暗2 中、蜘蛛戰車 無形 無2 大、汙染黑暗之王 不死 不死3 大、汙染蜘蛛女王 惡魔 暗3 大、骷髏迪塔勒泰晤勒斯 不死 不死4 大、終極青翅巨鳥 魚貝 水3 大</p>
+            </div>
+        </div>
     </div>
-    <div class="header-controls">
-      <button class="btn btn-primary" onclick="startAll()"><i class="fa-solid fa-play"></i> 全部開始</button>
-      <button class="btn btn-warning" onclick="pauseAll()"><i class="fa-solid fa-pause"></i> 全部暫停</button>
-      <button class="btn" onclick="resetAllCurrentStage()"><i class="fa-solid fa-rotate-left"></i> 重設本階段</button>
-      <button class="btn btn-accent" onclick="openSettings()"><i class="fa-solid fa-gear"></i> 設定</button>
+    
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="hideSettingsModal()">&times;</span>
+            <h2>系統設定</h2>
+            <div class="settings-form">
+                
+                <label for="darkModeToggleSetting">背景主題</label>
+                <select id="darkModeToggleSetting">
+                    <option value="false">淺色模式</option>
+                    <option value="true">深色模式</option>
+                </select>
+
+                <label for="groupCountSetting">計時器群組數</label>
+                <select id="groupCountSetting">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                </select>
+                
+                <div class="checkbox-group">
+                    <label for="autoStartCheckboxSetting">自動連續倒數</label>
+                    <input type="checkbox" id="autoStartCheckboxSetting">
+                </div>
+                
+                <hr style="border-top: 1px solid #ccc; margin: 25px 0;">
+                <label for="soundSourceSelect">音效來源</label>
+                <select id="soundSourceSelect" onchange="toggleSoundInput()">
+                    <option value="url">輸入音效網址</option>
+                    <option value="local">選擇本地音效檔</option>
+                </select>
+                
+                <div id="urlInputGroup" class="sound-input-group active">
+                    <label for="soundUrlInput">音效網址 (MP3/OGG/WAV)</label>
+                    <input type="text" id="soundUrlInput" placeholder="輸入自定義音效的 URL">
+                </div>
+
+                <div id="localInputGroup" class="sound-input-group">
+                    <label for="localFileInput">選擇本地音效檔</label>
+                    <input type="file" id="localFileInput" accept="audio/*">
+                    <p>注意：本地音效會被儲存，因此**請勿選擇過大的檔案** (建議小於 4MB，受限於瀏覽器儲存空間)。</p>
+                </div>
+                
+                <label for="blinkDurationInput">閃爍提示秒數 (秒)</label>
+                <input type="number" id="blinkDurationInput" min="1" step="1" value="3">
+            </div>
+            
+            <div class="settings-actions">
+                <button id="resetSettingsBtn" onclick="resetDefaultSettings()">還原預設值</button>
+                <button id="saveSettingsBtn" onclick="saveSettings()">儲存設定</button>
+            </div>
+        </div>
     </div>
-  </header>
 
-  <main class="grid-container" id="gridContainer">
-    <!-- Character Cards persistent DOM structure created once -->
-  </main>
 
-  <!-- Settings Modal -->
-  <div class="modal-overlay" id="settingsModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-sliders"></i> 設定與倒數階段配置</h3>
-        <button class="btn btn-sm" onclick="closeSettings()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; gap: 12px;">
-          <div class="form-group" style="flex: 1;">
-            <label>版面欄數 (Columns)</label>
-            <input type="number" id="cfgColumns" class="form-control" min="1" max="10" value="5">
-          </div>
-          <div class="form-group" style="flex: 1;">
-            <label>人物卡片呈現數量</label>
-            <input type="number" id="cfgCount" class="form-control" min="1" max="30" value="15">
-          </div>
-          <div class="form-group" style="flex: 1;">
-            <label>提示閃爍時間 (秒)</label>
-            <input type="number" id="cfgFlashSec" class="form-control" min="1" max="30" value="5">
-          </div>
-        </div>
+    <script>
+        const timerIntervals = {};
+        const alarmSound = document.getElementById('alarmSound');
+        const mainContainer = document.getElementById('mainContainer');
 
-        <div class="form-group">
-          <label>提示音類型</label>
-          <div style="display: flex; gap: 8px;">
-            <select id="cfgSound" class="form-control" style="flex: 1;">
-              <option value="beep">Beep 高頻嗶聲</option>
-              <option value="chime">Chime 和諧聲</option>
-              <option value="bell">Bell 鈴聲</option>
-              <option value="buzz">Buzz 低沉提示</option>
-            </select>
-            <button class="btn" onclick="testSound()"><i class="fa-solid fa-volume-high"></i> 測試聲音</button>
-          </div>
-        </div>
+        // --- 設定預設值 ---
+        const DEFAULT_SETTINGS = {
+            darkMode: true, 
+            groupCount: 2, 
+            autoStart: false, 
+            soundSourceType: 'url', 
+            soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            localSoundBase64: null, 
+            blinkDuration: 3 
+        };
+        let currentSettings = { ...DEFAULT_SETTINGS };
+        let localSoundObjectURL = null; 
+        const BLINK_ANIMATION_DURATION = 0.5; 
 
-        <!-- Settings Scope Tabs: Global Default vs Per Character -->
-        <div class="form-group">
-          <label>階段設定對象</label>
-          <div class="nav-tabs">
-            <div class="nav-tab active" id="tabGlobal" onclick="switchSettingTab('global')">全域基準設定 (預設)</div>
-            <div class="nav-tab" id="tabIndividual" onclick="switchSettingTab('individual')">個別人物獨立微調</div>
-          </div>
-        </div>
-
-        <div id="characterSelectBox" class="form-group" style="display: none;">
-          <label>選擇微調人物</label>
-          <select id="cfgCharTarget" class="form-control" onchange="onCharSelectChange()">
-            <!-- Dynamic options -->
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label id="stepSettingTitle">倒數階段時間 (秒) 與完成提示文字</label>
-          <div class="step-inputs" id="stepInputs">
-            <!-- Dynamic step input fields -->
-          </div>
-          <button class="btn btn-sm" style="margin-top: 6px; align-self: flex-start;" onclick="addStepInput()">
-            <i class="fa-solid fa-plus"></i> 增加階段
-          </button>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-warning btn-sm" onclick="applyGlobalToAllChars()"><i class="fa-solid fa-arrows-rotate"></i> 套用基準設定至所有人物</button>
-        <div>
-          <button class="btn" onclick="closeSettings()">取消</button>
-          <button class="btn btn-primary" onclick="saveSettings()">儲存變更</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // --- Application State ---
-    let config = {
-      columns: 5,
-      count: 15,
-      flashSec: 5,
-      sound: 'beep',
-      defaultSteps: [
-        { time: 145, label: '1王' },
-        { time: 78,  label: '2王' },
-        { time: 155, label: '3王' },
-        { time: 70,  label: '回家' }
-      ],
-      customCharSteps: {} // Stores per-character custom stage lists: { charId: [ {time, label}, ... ] }
-    };
-
-    let activeTab = 'global'; // 'global' or 'individual'
-    let selectedCharId = 1;
-    let editingSteps = []; // Temporary array for current modal editing view
-
-    let groups = [];
-    let audioCtx = null;
-
-    // Load persisted settings from localStorage
-    function loadStorage() {
-      const savedConfig = localStorage.getItem('timer_app_config_v6');
-      if (savedConfig) {
-        try {
-          config = JSON.parse(savedConfig);
-          if (!config.customCharSteps) config.customCharSteps = {};
-        } catch (e) { console.error('Failed to parse saved config', e); }
-      }
-    }
-
-    function saveStorage() {
-      localStorage.setItem('timer_app_config_v6', JSON.stringify(config));
-    }
-
-    function applyColumns() {
-      const cols = config.columns || 5;
-      document.getElementById('gridContainer').style.setProperty('--grid-cols', cols);
-    }
-
-    // Initialize Group State
-    function initGroups() {
-      groups = [];
-      for (let i = 1; i <= config.count; i++) {
-        // Use custom character steps if defined, otherwise clone default steps
-        const custom = config.customCharSteps[i];
-        const steps = (custom && custom.length > 0)
-          ? custom.map(s => ({ ...s }))
-          : config.defaultSteps.map(s => ({ ...s }));
-
-        groups.push({
-          id: i,
-          name: `人物 ${i}`,
-          steps: steps,
-          currentStepIndex: 0,
-          completedStagesCount: 0,
-          remaining: steps[0]?.time || 10,
-          state: 'idle', // 'idle', 'running', 'paused', 'finished'
-          autoContinue: false,
-          lastTick: null,
-          alertPlayed: false,
-          flashEndTimestamp: 0,
-          flashText: ''
-        });
-      }
-      applyColumns();
-      buildDOMCards();
-    }
-
-    // --- Persistent DOM Construction ---
-    function buildDOMCards() {
-      const container = document.getElementById('gridContainer');
-      container.innerHTML = '';
-
-      groups.forEach(g => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.id = `card-${g.id}`;
-
-        let blocksHtml = '';
-        for (let s = 0; s < g.steps.length; s++) {
-          blocksHtml += `<div class="stage-block" id="block-${g.id}-${s}"></div>`;
+        // --- Base64 轉換工具 (保持不變) ---
+        function blobToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
         }
-
-        card.innerHTML = `
-          <div class="card-header">
-            <div class="card-title">
-              <i class="fa-solid fa-user-ninja"></i>
-              <span>${g.name}</span>
-            </div>
-            <span class="status-badge badge-idle" id="badge-${g.id}">靜止</span>
-          </div>
-          <div class="card-body">
-            <div class="timer-info">
-              <div class="time-display" id="time-${g.id}">${formatTime(g.remaining)}</div>
-              <div class="step-info" id="step-${g.id}">階段 1 / ${g.steps.length}</div>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" id="progress-${g.id}"></div>
-            </div>
-
-            <!-- Stages Completed Color Blocks Indicator -->
-            <div class="stages-blocks" id="stages-blocks-${g.id}">
-              ${blocksHtml}
-            </div>
-
-            <!-- Center Flashing Stage Complete Alert Space -->
-            <div class="flash-alert-container">
-              <span class="flash-alert-text" id="flash-${g.id}"></span>
-            </div>
-
-            <!-- Single Main Contextual Action Button Slot -->
-            <div class="main-action-container">
-              <button class="btn btn-primary" id="btn-start-${g.id}"><i class="fa-solid fa-play"></i> 開始</button>
-              <button class="btn btn-warning" id="btn-pause-${g.id}" style="display:none;"><i class="fa-solid fa-pause"></i> 暫停</button>
-              <button class="btn btn-success" id="btn-continue-${g.id}" style="display:none;"><i class="fa-solid fa-forward"></i> 繼續下一階段</button>
-            </div>
-
-            <!-- Secondary Navigation Controls Bar -->
-            <div class="card-secondary-controls">
-              <button class="btn btn-sm" id="btn-prev-${g.id}"><i class="fa-solid fa-backward-step"></i> 上一階段</button>
-              <button class="btn btn-sm" id="btn-next-${g.id}"><i class="fa-solid fa-forward-step"></i> 下一階段</button>
-              <button class="btn btn-sm btn-danger" id="btn-reset-${g.id}"><i class="fa-solid fa-rotate-left"></i> 重設本階段</button>
-            </div>
-
-            <label class="auto-toggle">
-              <input type="checkbox" id="auto-${g.id}">
-              自動進行下一階段
-            </label>
-          </div>
-        `;
-
-        container.appendChild(card);
-
-        document.getElementById(`btn-start-${g.id}`).onclick = () => startCard(g.id);
-        document.getElementById(`btn-pause-${g.id}`).onclick = () => pauseCard(g.id);
-        document.getElementById(`btn-continue-${g.id}`).onclick = () => continueCard(g.id);
-        document.getElementById(`btn-prev-${g.id}`).onclick = () => prevStepCard(g.id);
-        document.getElementById(`btn-next-${g.id}`).onclick = () => nextStepCard(g.id);
-        document.getElementById(`btn-reset-${g.id}`).onclick = () => resetCurrentStageCard(g.id);
-
-        const autoCb = document.getElementById(`auto-${g.id}`);
-        autoCb.checked = g.autoContinue;
-        autoCb.onchange = (e) => { g.autoContinue = e.target.checked; };
-      });
-
-      updateDOMInPlace(performance.now());
-    }
-
-    // --- In-Place DOM Updates ---
-    function updateDOMInPlace(now) {
-      groups.forEach(g => {
-        const curStep = g.steps[g.currentStepIndex] || { time: 10, label: '' };
-        const totalDuration = curStep.time || 1;
-        const pct = Math.max(0, Math.min(100, ((totalDuration - g.remaining) / totalDuration) * 100));
-
-        // Time display
-        const timeEl = document.getElementById(`time-${g.id}`);
-        if (timeEl) timeEl.textContent = formatTime(g.remaining);
-
-        // Step display
-        const stepEl = document.getElementById(`step-${g.id}`);
-        if (stepEl) stepEl.textContent = `階段 ${g.currentStepIndex + 1} (${curStep.label || '無名稱'}) / ${g.steps.length}`;
-
-        // Progress bar width
-        const progEl = document.getElementById(`progress-${g.id}`);
-        if (progEl) {
-          progEl.style.width = `${pct}%`;
-          if (g.state === 'finished') {
-            progEl.classList.add('done');
-          } else {
-            progEl.classList.remove('done');
-          }
-        }
-
-        // Color Blocks Indicator
-        for (let s = 0; s < g.steps.length; s++) {
-          const blockEl = document.getElementById(`block-${g.id}-${s}`);
-          if (blockEl) {
-            blockEl.className = 'stage-block';
-            if (s < g.completedStagesCount) {
-              blockEl.classList.add('completed');
-            } else if (s === g.currentStepIndex && g.state === 'running') {
-              blockEl.classList.add('current');
+        function base64ToBlobUrl(base64Data) {
+            if (!base64Data || !base64Data.includes(',')) return null;
+            const parts = base64Data.split(',');
+            const mimeType = parts[0].match(/:(.*?);/)[1];
+            const base64 = parts[1];
+            const byteCharacters = atob(base64);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                byteArrays.push(new Uint8Array(byteNumbers));
             }
-          }
+            const blob = new Blob(byteArrays, { type: mimeType });
+            if (localSoundObjectURL) URL.revokeObjectURL(localSoundObjectURL);
+            return URL.createObjectURL(blob);
         }
-
-        // Flashing Alert Prompt Display Logic
-        const flashEl = document.getElementById(`flash-${g.id}`);
-        if (flashEl) {
-          if (now < g.flashEndTimestamp) {
-            flashEl.textContent = `⚠️ ${g.flashText} 倒數完成！`;
-            flashEl.style.display = 'inline-block';
-          } else {
-            flashEl.style.display = 'none';
-          }
-        }
-
-        // Status Badge
-        const badgeEl = document.getElementById(`badge-${g.id}`);
-        if (badgeEl) {
-          badgeEl.className = 'status-badge ' + (
-            g.state === 'running' ? 'badge-running' :
-            g.state === 'paused' ? 'badge-paused' :
-            g.state === 'finished' ? 'badge-finished' : 'badge-idle'
-          );
-          badgeEl.textContent = (
-            g.state === 'running' ? '倒數中' :
-            g.state === 'paused' ? '已暫停' :
-            g.state === 'finished' ? '已完成' : '靜止'
-          );
-        }
-
-        // Main Action Buttons Toggle
-        const btnStart = document.getElementById(`btn-start-${g.id}`);
-        const btnPause = document.getElementById(`btn-pause-${g.id}`);
-        const btnContinue = document.getElementById(`btn-continue-${g.id}`);
-
-        if (btnStart && btnPause && btnContinue) {
-          if (g.state === 'running') {
-            btnStart.style.display = 'none';
-            btnPause.style.display = 'inline-flex';
-            btnContinue.style.display = 'none';
-          } else if (g.state === 'finished') {
-            btnStart.style.display = 'none';
-            btnPause.style.display = 'none';
-            btnContinue.style.display = 'inline-flex';
-          } else {
-            btnStart.style.display = 'inline-flex';
-            btnPause.style.display = 'none';
-            btnContinue.style.display = 'none';
-          }
-        }
-      });
-    }
-
-    // --- Action Handlers ---
-    function startCard(id) {
-      initAudio();
-      const g = groups.find(x => x.id === id);
-      if (!g) return;
-
-      if (g.state === 'finished') {
-        g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-      }
-
-      g.state = 'running';
-      g.lastTick = performance.now();
-      g.alertPlayed = false;
-      updateDOMInPlace(performance.now());
-    }
-
-    function pauseCard(id) {
-      const g = groups.find(x => x.id === id);
-      if (!g) return;
-
-      if (g.state === 'running') {
-        g.state = 'paused';
-        g.lastTick = null;
-        updateDOMInPlace(performance.now());
-      }
-    }
-
-    function prevStepCard(id) {
-      const g = groups.find(x => x.id === id);
-      if (!g) return;
-
-      if (g.currentStepIndex > 0) {
-        g.currentStepIndex--;
-        if (g.completedStagesCount > g.currentStepIndex) {
-          g.completedStagesCount = g.currentStepIndex;
-        }
-      }
-      g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-      g.state = 'idle';
-      g.lastTick = null;
-      g.alertPlayed = false;
-      updateDOMInPlace(performance.now());
-    }
-
-    function nextStepCard(id) {
-      const g = groups.find(x => x.id === id);
-      if (!g) return;
-
-      if (g.currentStepIndex >= g.completedStagesCount) {
-        g.completedStagesCount = g.currentStepIndex + 1;
-      }
-
-      if (g.currentStepIndex < g.steps.length - 1) {
-        g.currentStepIndex++;
-      } else {
-        g.currentStepIndex = 0;
-        g.completedStagesCount = 0;
-      }
-      g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-      g.state = 'idle';
-      g.lastTick = null;
-      g.alertPlayed = false;
-      updateDOMInPlace(performance.now());
-    }
-
-    function continueCard(id) {
-      initAudio();
-      const g = groups.find(x => x.id === id);
-      if (!g) return;
-
-      if (g.currentStepIndex >= g.completedStagesCount) {
-        g.completedStagesCount = g.currentStepIndex + 1;
-      }
-
-      if (g.currentStepIndex < g.steps.length - 1) {
-        g.currentStepIndex++;
-        g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-        g.state = 'running';
-        g.lastTick = performance.now();
-      } else {
-        g.currentStepIndex = 0;
-        g.completedStagesCount = 0;
-        g.remaining = g.steps[0]?.time || 10;
-        g.state = 'idle';
-        g.lastTick = null;
-      }
-      g.alertPlayed = false;
-      updateDOMInPlace(performance.now());
-    }
-
-    function resetCurrentStageCard(id) {
-      const g = groups.find(x => x.id === id);
-      if (!g) return;
-
-      g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-      g.state = 'idle';
-      g.lastTick = null;
-      g.alertPlayed = false;
-      updateDOMInPlace(performance.now());
-    }
-
-    // --- Global Controls ---
-    function startAll() {
-      groups.forEach(g => startCard(g.id));
-    }
-
-    function pauseAll() {
-      groups.forEach(g => pauseCard(g.id));
-    }
-
-    function resetAllCurrentStage() {
-      groups.forEach(g => resetCurrentStageCard(g.id));
-    }
-
-    // --- Animation Loop ---
-    function timerLoop(now) {
-      groups.forEach(g => {
-        if (g.state === 'running') {
-          if (!g.lastTick) g.lastTick = now;
-          const dt = (now - g.lastTick) / 1000;
-          g.lastTick = now;
-
-          g.remaining -= dt;
-
-          if (g.remaining <= 0) {
-            g.remaining = 0;
-
-            const curStepLabel = g.steps[g.currentStepIndex]?.label || `階段 ${g.currentStepIndex + 1}`;
-
-            if (!g.alertPlayed) {
-              playAlertSound();
-              g.alertPlayed = true;
-
-              // Trigger flashing prompt banner
-              const flashMs = (config.flashSec || 5) * 1000;
-              g.flashEndTimestamp = now + flashMs;
-              g.flashText = curStepLabel;
+        
+        // --- 設定管理函式 ---
+        function loadSettings() {
+            try {
+                const storedSettings = localStorage.getItem('timerSettings');
+                if (storedSettings) {
+                    const loaded = JSON.parse(storedSettings);
+                    currentSettings = { ...DEFAULT_SETTINGS, ...loaded };
+                } else {
+                    currentSettings = { ...DEFAULT_SETTINGS };
+                }
+            } catch (e) {
+                console.error("無法從 localStorage 載入設定，使用預設值。", e);
+                currentSettings = { ...DEFAULT_SETTINGS };
             }
+            
+            // 初始化網頁時套用所有設定
+            applySettings();
+        }
 
-            if (g.currentStepIndex >= g.completedStagesCount) {
-              g.completedStagesCount = g.currentStepIndex + 1;
-            }
-
-            if (g.autoContinue) {
-              if (g.currentStepIndex < g.steps.length - 1) {
-                g.currentStepIndex++;
-                g.remaining = g.steps[g.currentStepIndex]?.time || 10;
-                g.alertPlayed = false;
-              } else {
-                g.state = 'finished';
-                g.lastTick = null;
-              }
+        function applySettings() {
+            // 1. 套用深淺色模式
+            if (currentSettings.darkMode) {
+                document.body.classList.add('dark-mode');
             } else {
-              g.state = 'finished';
-              g.lastTick = null;
+                document.body.classList.remove('dark-mode');
             }
-          }
+            
+            // 2. 重新生成群組
+            generateUnits(currentSettings.groupCount);
+
+            // 3. 套用音效來源
+            if (currentSettings.soundSourceType === 'local' && currentSettings.localSoundBase64) {
+                localSoundObjectURL = base64ToBlobUrl(currentSettings.localSoundBase64);
+                alarmSound.src = localSoundObjectURL;
+            } else if (currentSettings.soundSourceType === 'url') {
+                if (localSoundObjectURL) URL.revokeObjectURL(localSoundObjectURL);
+                localSoundObjectURL = null;
+                alarmSound.src = currentSettings.soundUrl;
+            } else {
+                 if (localSoundObjectURL) URL.revokeObjectURL(localSoundObjectURL);
+                 localSoundObjectURL = null;
+                 alarmSound.src = DEFAULT_SETTINGS.soundUrl;
+                 if (currentSettings.soundSourceType === 'local') {
+                     currentSettings.soundSourceType = 'url';
+                 }
+            }
+            alarmSound.load(); 
+
+            // 4. 更新閃爍動畫的重複次數
+            const iterationCount = Math.max(1, Math.ceil(currentSettings.blinkDuration / BLINK_ANIMATION_DURATION));
+            
+            const styleSheet = document.styleSheets[0];
+            let rule = null;
+
+            for (let i = 0; i < styleSheet.cssRules.length; i++) {
+                if (styleSheet.cssRules[i].selectorText === '.timer-container.blinking') {
+                    rule = styleSheet.cssRules[i];
+                    break;
+                }
+            }
+            
+            if (rule) {
+                rule.style.animation = `blink-red ${BLINK_ANIMATION_DURATION}s ${iterationCount} linear`;
+            } else {
+                 console.error("找不到 .timer-container.blinking CSS 規則，請檢查樣式表。");
+            }
         }
-      });
 
-      updateDOMInPlace(now);
-      requestAnimationFrame(timerLoop);
-    }
+        async function saveSettings() {
+            const settingsModal = document.getElementById('settingsModal');
+            
+            // 獲取一般設定
+            const soundSourceType = document.getElementById('soundSourceSelect').value;
+            const newBlinkDuration = parseInt(document.getElementById('blinkDurationInput').value, 10);
+            
+            // 獲取新增的設定
+            const newDarkMode = document.getElementById('darkModeToggleSetting').value === 'true';
+            const newGroupCount = parseInt(document.getElementById('groupCountSetting').value, 10);
+            const newAutoStart = document.getElementById('autoStartCheckboxSetting').checked;
+            
+            // 更新 currentSettings
+            currentSettings.darkMode = newDarkMode;
+            currentSettings.groupCount = newGroupCount;
+            currentSettings.autoStart = newAutoStart;
+            currentSettings.soundSourceType = soundSourceType;
+            currentSettings.localSoundBase64 = null; 
 
-    // --- Taiwan Time Binary Calculation ---
-    function updateTaiwanTimeBinary() {
-      const now = new Date();
-      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-      const twDate = new Date(utc + (3600000 * 8));
+            // 處理音效設定
+            if (soundSourceType === 'url') {
+                const newSoundUrl = document.getElementById('soundUrlInput').value.trim();
+                if (newSoundUrl) {
+                    currentSettings.soundUrl = newSoundUrl;
+                }
+            } else if (soundSourceType === 'local') {
+                const fileInput = document.getElementById('localFileInput');
+                
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    if (file.size > 4 * 1024 * 1024) { 
+                         alert('檔案大小超過 4MB 限制，請選擇更小的音效檔。');
+                         return;
+                    }
+                    try {
+                        const base64Data = await blobToBase64(file);
+                        currentSettings.localSoundBase64 = base64Data;
+                    } catch (e) {
+                        alert('無法讀取音效檔內容，儲存失敗。');
+                        console.error('File read error:', e);
+                        return;
+                    }
+                } else if (currentSettings.soundSourceType === 'local' && !currentSettings.localSoundBase64) {
+                    // 如果用戶之前沒有存本地音效，且這次也沒有選，則阻止儲存
+                    alert('請選擇一個本地音效檔！');
+                    return; 
+                } else {
+                    // 保留舊的 Base64 數據
+                    const stored = JSON.parse(localStorage.getItem('timerSettings'));
+                    if (stored && stored.soundSourceType === 'local') {
+                         currentSettings.localSoundBase64 = stored.localSoundBase64;
+                    }
+                }
+            }
+            
+            if (!isNaN(newBlinkDuration) && newBlinkDuration >= 1) {
+                currentSettings.blinkDuration = newBlinkDuration;
+            }
 
-      const month = twDate.getMonth() + 1;
-      const day = twDate.getDate();
+            try {
+                // 儲存所有設定到 Local Storage
+                localStorage.setItem('timerSettings', JSON.stringify({
+                    darkMode: currentSettings.darkMode,
+                    groupCount: currentSettings.groupCount,
+                    autoStart: currentSettings.autoStart,
+                    soundSourceType: currentSettings.soundSourceType,
+                    soundUrl: currentSettings.soundUrl,
+                    localSoundBase64: currentSettings.localSoundBase64,
+                    blinkDuration: currentSettings.blinkDuration
+                }));
+                
+                applySettings();
+                hideSettingsModal();
+                alert('設定已儲存並套用！');
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert('儲存失敗：瀏覽器儲存空間不足。請選擇更小的音效檔。');
+                } else {
+                    alert('儲存設定失敗，請檢查瀏覽器儲存權限。');
+                }
+            }
+        }
+        
+        function resetDefaultSettings() {
+            // 重置 currentSettings
+            currentSettings = { ...DEFAULT_SETTINGS };
+            
+            // 清理 UI 
+            document.getElementById('darkModeToggleSetting').value = DEFAULT_SETTINGS.darkMode.toString();
+            document.getElementById('groupCountSetting').value = DEFAULT_SETTINGS.groupCount;
+            document.getElementById('autoStartCheckboxSetting').checked = DEFAULT_SETTINGS.autoStart;
+            document.getElementById('soundSourceSelect').value = DEFAULT_SETTINGS.soundSourceType;
+            document.getElementById('soundUrlInput').value = DEFAULT_SETTINGS.soundUrl;
+            document.getElementById('blinkDurationInput').value = DEFAULT_SETTINGS.blinkDuration;
+            document.getElementById('localFileInput').value = ''; 
+            
+            toggleSoundInput(); 
+            
+            // 儲存預設值
+            localStorage.setItem('timerSettings', JSON.stringify(DEFAULT_SETTINGS));
+            
+            applySettings(); 
+            alert('設定已還原為預設值並儲存！');
+        }
 
-      const calcValue = (month + day) * 5;
-      const binaryStr = calcValue.toString(2).padStart(8, '0');
-	  
-	  const onePositions = [];
-	  const clickPositions = [];
-	  for (let i = 0; i < binaryStr.length; i++) {
-		if (binaryStr[i] === '1') {
-			onePositions.push(i + 1);
-			clickPositions.push('☑');
-		} else {
-			clickPositions.push('☐');
-		}
-	  }
-	  
-      document.getElementById('binaryResult').textContent = clickPositions.join('').substring(0, 4) + ' ' + clickPositions.join('').substring(4, 8);
-	  document.getElementById('binaryResult2').textContent = onePositions.join('');
-      // document.getElementById('binaryFormula').textContent = `台灣時間: (${month}月 + ${day}日) × 5 = ${calcValue} [2進位]`;
-    }
+        function toggleSoundInput() {
+            const selectValue = document.getElementById('soundSourceSelect').value;
+            const urlGroup = document.getElementById('urlInputGroup');
+            const localGroup = document.getElementById('localInputGroup');
+            
+            if (selectValue === 'url') {
+                urlGroup.classList.add('active');
+                localGroup.classList.remove('active');
+            } else {
+                urlGroup.classList.remove('active');
+                localGroup.classList.add('active');
+            }
+        }
 
-    function formatTime(sec) {
-      sec = Math.max(0, Math.ceil(sec));
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
+        // --- 模態視窗處理函式 ---
+        function showSettingsModal() {
+            // 載入當前設定值到輸入框
+            document.getElementById('darkModeToggleSetting').value = currentSettings.darkMode.toString();
+            document.getElementById('groupCountSetting').value = currentSettings.groupCount;
+            document.getElementById('autoStartCheckboxSetting').checked = currentSettings.autoStart;
+            
+            document.getElementById('soundSourceSelect').value = currentSettings.soundSourceType;
+            document.getElementById('soundUrlInput').value = currentSettings.soundUrl;
+            document.getElementById('blinkDurationInput').value = currentSettings.blinkDuration;
+            document.getElementById('localFileInput').value = ''; 
 
-    // --- Web Audio API Alert Synthesizer ---
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
+            toggleSoundInput(); 
+            
+            document.getElementById('settingsModal').style.display = 'block';
+        }
 
-    function playAlertSound() {
-      initAudio();
-      if (!audioCtx) return;
+        function hideSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
 
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+        function showCardModal() {
+            document.getElementById('cardInfoModal').style.display = 'block';
+        }
 
-      const type = config.sound || 'beep';
-      const now = audioCtx.currentTime;
+        function hideCardModal() {
+            document.getElementById('cardInfoModal').style.display = 'none';
+        }
 
-      if (type === 'beep') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
-      } else if (type === 'chime') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.15);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        osc.start(now);
-        osc.stop(now + 0.6);
-      } else if (type === 'bell') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1200, now);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-        osc.start(now);
-        osc.stop(now + 0.8);
-      } else if (type === 'buzz') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, now);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        osc.start(now);
-        osc.stop(now + 0.5);
-      }
-    }
 
-    function testSound() {
-      initAudio();
-      config.sound = document.getElementById('cfgSound').value;
-      playAlertSound();
-    }
-
-    // --- Settings Modal Handlers ---
-    function openSettings() {
-      document.getElementById('cfgColumns').value = config.columns || 5;
-      document.getElementById('cfgCount').value = config.count;
-      document.getElementById('cfgFlashSec').value = config.flashSec || 5;
-      document.getElementById('cfgSound').value = config.sound;
-
-      // Populate Character Target Select Option
-      const charSelect = document.getElementById('cfgCharTarget');
-      charSelect.innerHTML = '';
-      groups.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.textContent = g.name;
-        charSelect.appendChild(opt);
-      });
-
-      switchSettingTab('global');
-      document.getElementById('settingsModal').classList.add('active');
-    }
-
-    function closeSettings() {
-      document.getElementById('settingsModal').classList.remove('active');
-    }
-
-    function switchSettingTab(tab) {
-      // Save current input before switching view
-      if (activeTab === 'individual') {
-        saveCurrentEditingToChar(selectedCharId);
-      }
-
-      activeTab = tab;
-      document.getElementById('tabGlobal').classList.toggle('active', tab === 'global');
-      document.getElementById('tabIndividual').classList.toggle('active', tab === 'individual');
-
-      const selectBox = document.getElementById('characterSelectBox');
-      selectBox.style.display = tab === 'individual' ? 'flex' : 'none';
-
-      if (tab === 'global') {
-        document.getElementById('stepSettingTitle').textContent = '全域預設階段時間 (秒) 與完成提示名稱';
-        editingSteps = config.defaultSteps.map(s => ({ ...s }));
-      } else {
-        selectedCharId = parseInt(document.getElementById('cfgCharTarget').value) || 1;
-        document.getElementById('stepSettingTitle').textContent = `人物 ${selectedCharId} 獨立階段設定`;
-        loadSelectedCharSteps();
-        return;
-      }
-      renderStepInputs();
-    }
-
-    function onCharSelectChange() {
-      // Save previous character inputs before switching to newly selected character
-      if (activeTab === 'individual') {
-        saveCurrentEditingToChar(selectedCharId);
-      }
-      selectedCharId = parseInt(document.getElementById('cfgCharTarget').value) || 1;
-      document.getElementById('stepSettingTitle').textContent = `人物 ${selectedCharId} 獨立階段設定`;
-      loadSelectedCharSteps();
-    }
-
-    function loadSelectedCharSteps() {
-      const custom = config.customCharSteps[selectedCharId];
-      if (custom && custom.length > 0) {
-        editingSteps = custom.map(s => ({ ...s }));
-      } else {
-        // Fallback to character's current group steps or global defaults
-        const g = groups.find(x => x.id === selectedCharId);
-        editingSteps = (g && g.steps) ? g.steps.map(s => ({ ...s })) : config.defaultSteps.map(s => ({ ...s }));
-      }
-      renderStepInputs();
-    }
-
-    function saveCurrentEditingToChar(charId) {
-      const inputs = readStepInputsFromDOM();
-      if (inputs.length > 0) {
-        config.customCharSteps[charId] = inputs.map(s => ({ ...s }));
-      }
-    }
-
-    function renderStepInputs() {
-      const container = document.getElementById('stepInputs');
-      container.innerHTML = '';
-      editingSteps.forEach((s, idx) => {
-        const row = document.createElement('div');
-        row.className = 'step-row';
-        row.innerHTML = `
-          <span>第 ${idx + 1} 階段:</span>
-          <input type="text" class="form-control step-lbl" value="${s.label || ''}" placeholder="提示名稱(如:1王)" style="flex: 1;">
-          <input type="number" class="form-control step-val" value="${s.time || 10}" min="1" placeholder="秒數" style="width: 90px;">
-          <button class="btn btn-sm btn-danger" onclick="removeStepInput(${idx})"><i class="fa-solid fa-trash"></i></button>
-        `;
-        container.appendChild(row);
-      });
-    }
-
-    function readStepInputsFromDOM() {
-      const labels = document.querySelectorAll('.step-lbl');
-      const times = document.querySelectorAll('.step-val');
-      const result = [];
-      labels.forEach((lblEl, idx) => {
-        const timeVal = Math.max(1, parseInt(times[idx]?.value) || 10);
-        const labelVal = lblEl.value.trim() || `階段 ${idx + 1}`;
-        result.push({ time: timeVal, label: labelVal });
-      });
-      return result;
-    }
-
-    function addStepInput() {
-      editingSteps = readStepInputsFromDOM();
-      editingSteps.push({ time: 60, label: `階段 ${editingSteps.length + 1}` });
-      renderStepInputs();
-    }
-
-    function removeStepInput(idx) {
-      editingSteps = readStepInputsFromDOM();
-      if (editingSteps.length <= 1) return;
-      editingSteps.splice(idx, 1);
-      renderStepInputs();
-    }
-
-    function applyGlobalToAllChars() {
-      const inputs = readStepInputsFromDOM();
-      if (inputs.length === 0) return;
-
-      config.defaultSteps = inputs.map(s => ({ ...s }));
-      config.customCharSteps = {}; // Clear individual overrides
-
-      initGroups();
-      alert('已將目前的階段配置套用到所有人物！');
-    }
-
-    function saveSettings() {
-      const newCols = parseInt(document.getElementById('cfgColumns').value) || 5;
-      const newCount = parseInt(document.getElementById('cfgCount').value) || 15;
-      const newFlashSec = parseInt(document.getElementById('cfgFlashSec').value) || 5;
-      const newSound = document.getElementById('cfgSound').value;
-
-      const currentInputs = readStepInputsFromDOM();
-
-      config.columns = Math.max(1, Math.min(10, newCols));
-      config.count = Math.max(1, newCount);
-      config.flashSec = Math.max(1, Math.min(30, newFlashSec));
-      config.sound = newSound;
-
-      if (activeTab === 'global') {
-        config.defaultSteps = currentInputs.length > 0 ? currentInputs : [
-          { time: 145, label: '1王' },
-          { time: 78,  label: '2王' },
-          { time: 155, label: '3王' },
-          { time: 70,  label: '回家' }
+        // --- 原有計時器與音效邏輯 (部分修改) ---
+        const defaultTimerPresets = [
+            { minutes: 2, seconds: 25 },
+            { minutes: 1, seconds: 18 },
+            { minutes: 2, seconds: 35 }
         ];
-      } else {
-        // Save current editing steps for selected character
-        if (currentInputs.length > 0) {
-          config.customCharSteps[selectedCharId] = currentInputs.map(s => ({ ...s }));
+        // timerPresets 現在是一個全局變量，用於儲存當前的計時器設定
+        let timerPresets = [...defaultTimerPresets];
+        
+        let isSoundPlaying = false; 
+
+        function displayTime(elementId, minutes, seconds) {
+            const timerElement = document.getElementById(elementId);
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            timerElement.textContent = `${formattedMinutes}:${formattedSeconds}`;
+            timerElement.classList.remove('finished');
         }
-      }
 
-      saveStorage();
-      initGroups();
-      closeSettings();
-    }
+        function stopSound() {
+            if (isSoundPlaying) {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+                isSoundPlaying = false;
+            }
+        }
 
-    // App Initializer
-    window.onload = () => {
-      loadStorage();
-      initGroups();
-      updateTaiwanTimeBinary();
-      setInterval(updateTaiwanTimeBinary, 1000);
-      requestAnimationFrame(timerLoop);
-    };
-  </script>
+        function playAlarm() {
+            if (!isSoundPlaying) {
+                if (!alarmSound.src || alarmSound.readyState < 2) {
+                    console.log('音效尚未載入或來源無效，無法播放。');
+                    return; 
+                }
+                
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+                alarmSound.play().then(() => {
+                    isSoundPlaying = true;
+                }).catch(e => {
+                    console.log('音訊播放失敗 (可能被瀏覽器限制或 URL 無效):', e);
+                    isSoundPlaying = true; 
+                });
+            }
+        }
+        
+        function checkAndToggleSound() {
+            const blinkingElements = document.querySelectorAll('#mainContainer .blinking');
+            
+            if (blinkingElements.length > 0) {
+                playAlarm(); 
+            } else {
+                stopSound(); 
+            }
+        }
+
+        function handleAnimationEnd(event) {
+            if (event.animationName === 'blink-red') {
+                const container = event.target;
+                container.classList.remove('blinking'); 
+                checkAndToggleSound();
+            }
+        }
+
+        function startTimer(elementId) {
+            const timerElement = document.getElementById(elementId);
+            const initialMinutes = parseInt(timerElement.dataset.initialMinutes, 10);
+            const initialSeconds = parseInt(timerElement.dataset.initialSeconds, 10);
+
+            clearInterval(timerIntervals[elementId]);
+            let totalSeconds = initialMinutes * 60 + initialSeconds;
+
+            timerElement.classList.add('running');
+            timerElement.classList.remove('finished');
+
+            const container = timerElement.closest('.timer-container');
+            container.querySelector('.start-btn').style.display = 'none';
+            container.querySelector('.reset-btn').style.display = 'block';
+
+            function updateTimer() {
+                if (totalSeconds < 0) {
+                    clearInterval(timerIntervals[elementId]);
+                    timerElement.textContent = "00:00";
+                    timerElement.classList.remove('running');
+                    timerElement.classList.add('finished');
+                    
+                    container.classList.add('blinking');
+                    checkAndToggleSound();
+
+                    // 使用 currentSettings 中的 autoStart
+                    if (currentSettings.autoStart) { 
+                        const parts = elementId.split('_');
+                        const groupIndex = parseInt(parts[1]);
+                        const timerIndex = parseInt(parts[2]);
+                        
+                        if (timerIndex < timerPresets.length) {
+                            const nextTimerId = `timer_${groupIndex}_${timerIndex + 1}`;
+                            setTimeout(() => {
+                                startTimer(nextTimerId);
+                            }, 1000);
+                        }
+                    }
+
+                    return;
+                }
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                displayTime(elementId, minutes, seconds);
+                totalSeconds--;
+            }
+            updateTimer();
+            timerIntervals[elementId] = setInterval(updateTimer, 1000);
+        }
+
+        function resetTimer(elementId) {
+            const timerElement = document.getElementById(elementId);
+            const initialMinutes = parseInt(timerElement.dataset.initialMinutes, 10);
+            const initialSeconds = parseInt(timerElement.dataset.initialSeconds, 10);
+
+            clearInterval(timerIntervals[elementId]);
+            displayTime(elementId, initialMinutes, initialSeconds);
+            timerElement.classList.remove('running', 'finished');
+            
+            const container = timerElement.closest('.timer-container');
+            
+            container.classList.remove('blinking');
+            checkAndToggleSound();
+
+            container.querySelector('.start-btn').style.display = 'block';
+            container.querySelector('.reset-btn').style.display = 'none';
+        }
+
+        function resetGroupTimers(groupIndex) {
+            const groupContainer = document.getElementById(`group_${groupIndex}`);
+            if (groupContainer) {
+                const timerElements = groupContainer.querySelectorAll('.timer');
+                timerElements.forEach(timer => {
+                    resetTimer(timer.id);
+                });
+            }
+        }
+        
+        // 核心邏輯：根據設定的群組數生成 UI
+        function generateUnits(count) {
+            mainContainer.innerHTML = '';
+            
+            for (let i = 1; i <= count; i++) {
+                const groupHtml = `
+                    <div class="group-container" id="group_${i}">
+                        <div class="group-controls">
+                            <button onclick="resetGroupTimers(${i})">群組 ${i} 全部重設</button>
+                        </div>
+                        <div class="timers-group">
+                            ${timerPresets.map((preset, index) => {
+                                const timerId = `timer_${i}_${index + 1}`;
+                                return `
+                                    <div class="timer-container" id="container_${timerId}">
+                                        <div id="${timerId}" class="timer" 
+                                            data-initial-minutes="${preset.minutes}" 
+                                            data-initial-seconds="${preset.seconds}">
+                                            ${String(preset.minutes).padStart(2, '0')}:${String(preset.seconds).padStart(2, '0')}
+                                        </div>
+                                        <div class="controls">
+                                            <button class="start-btn" onclick="startTimer('${timerId}')">開始</button>
+                                            <button class="reset-btn" onclick="resetTimer('${timerId}')">重設</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                mainContainer.insertAdjacentHTML('beforeend', groupHtml);
+            }
+            document.querySelectorAll('.group-container').forEach((group, index) => {
+                resetGroupTimers(index + 1);
+            });
+            document.querySelectorAll('.timer-container').forEach(container => {
+                container.removeEventListener('animationend', handleAnimationEnd); 
+                container.addEventListener('animationend', handleAnimationEnd);
+            });
+        }
+        
+        function updateDateResult() {
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const taiwanTime = new Date(utcTime + (8 * 3600000));
+            const month = taiwanTime.getMonth() + 1;
+            const day = taiwanTime.getDate();
+            const result = (month + day) * 5;
+            const binaryResult = (result >>> 0).toString(2).padStart(8, '0');
+
+            const onePositions = [];
+            for (let i = 0; i < binaryResult.length; i++) {
+                if (binaryResult[i] === '1') {
+                    onePositions.push(i + 1);
+                }
+            }
+            
+            const formattedBinary = binaryResult.substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + binaryResult.substring(4, 8);
+
+            const dateResultElement = document.getElementById('dateResult');
+            dateResultElement.innerHTML = `
+                二進位: <strong>${formattedBinary}</strong><br>
+                位數: <strong>${onePositions.join('')}</strong>
+            `;
+        }
+
+        // URL 參數解析函式
+        function parseUrlTimerParams() {
+            const hash = location.hash;
+            if (hash.startsWith('#timer=')) {
+                const paramString = hash.substring(7);
+                const params = paramString.split(',');
+                
+                // 擴展 timerPresets 以容納 URL 參數指定的計時器數量（如果超過預設 3 個）
+                const newPresets = []; 
+                
+                params.forEach((param) => {
+                    const timeParts = param.split(':');
+                    if (timeParts.length === 2) {
+                        const minutes = parseInt(timeParts[0]);
+                        const seconds = parseInt(timeParts[1]);
+                        if (!isNaN(minutes) && !isNaN(seconds)) {
+                            newPresets.push({ minutes, seconds });
+                        }
+                    }
+                });
+
+                // 知識庫: 只有當 URL 參數有效時，才覆蓋 timerPresets
+                if (newPresets.length > 0) {
+                    timerPresets = newPresets;
+                }
+            }
+            // 否則，timerPresets 保持為 defaultTimerPresets
+        }
+
+		// 計算並設定到下一個午夜 00:00 的定時器
+        function setDailyUpdateTimer() {
+            const now = new Date();
+            // 台灣時區偏移量為 +8 小時 (8 * 60 * 60 * 1000 毫秒)
+            const timezoneOffset = 8 * 3600000; 
+            
+            // 取得當前台灣時間
+            const currentTaiwanTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + timezoneOffset);
+
+            // 計算下一個午夜 00:00 的台灣時間
+            const nextMidnight = new Date(currentTaiwanTime);
+            nextMidnight.setDate(currentTaiwanTime.getDate() + 1);
+            nextMidnight.setHours(0, 0, 0, 0); 
+            
+            // 轉換回 UTC 毫秒，然後再減去時區偏移，得到目標本地時間的毫秒數
+            const nextMidnightLocalTime = nextMidnight.getTime() - (now.getTimezoneOffset() * 60000) - timezoneOffset;
+            
+            // 必須從當前的本地時間計算差值
+            const delay = nextMidnightLocalTime - now.getTime();
+
+            if (delay > 0) {
+                console.log(`設定每日更新計時器，將在 ${delay / 1000} 秒後執行更新。`);
+                setTimeout(() => {
+                    updateDateResult(); // 更新密碼
+                    setDailyUpdateTimer(); // 重新設定計時器給下一天
+                }, delay);
+            } else {
+                 // 如果延遲為負數 (理論上不應該)，則等待 1 秒後重試
+                 console.log("計算延遲錯誤，立即重試設定定時器。");
+                 setTimeout(setDailyUpdateTimer, 1000);
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. 優先解析 URL 參數，更新 timerPresets 陣列
+            parseUrlTimerParams(); 
+
+            // 2. 載入並套用所有設定 (包含深淺色、群組數，並呼叫 generateUnits)
+            // generateUnits 執行時，會使用步驟 1 更新後的 timerPresets 
+            loadSettings(); 
+            
+            // 3. 更新頂部的解碼資訊
+            updateDateResult();
+
+			// 4. 設定換日自動更新計時器
+            setDailyUpdateTimer();
+            
+            // 點擊對話框外部關閉對話框
+            window.onclick = function(event) {
+                const cardModal = document.getElementById('cardInfoModal');
+                const settingsModal = document.getElementById('settingsModal');
+                if (event.target === cardModal) {
+                    hideCardModal();
+                }
+                if (event.target === settingsModal) {
+                    hideSettingsModal();
+                }
+            }
+        });
+
+		document.addEventListener('keydown', function(event) {
+			// 檢查是否是 F5 鍵 (keyCode 116)
+			// 檢查是否是 Ctrl + R (keyCode 82, 通常用於快速重新整理)
+			if (event.keyCode === 116 || (event.ctrlKey && event.keyCode === 82)) {
+				
+				// 阻止預設的 F5 或 Ctrl+R 行為
+				event.preventDefault();
+
+				// **可選：** 彈出一個提示框確認
+				const confirmed = confirm("您確定要離開此頁面嗎？重新整理可能會遺失目前的倒數。");
+				if (confirmed) {
+				    window.location.reload(); // 如果使用者確認，則執行重新整理
+				} else {
+				     // 不執行任何操作，停留在原頁面
+				}
+			}
+		});
+    </script>
+
 </body>
 </html>
