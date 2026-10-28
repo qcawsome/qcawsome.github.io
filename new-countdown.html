@@ -429,7 +429,8 @@
   <header>
     <div class="binary-box">
       <div class="binary-value" id="binaryResult">00000000</div>
-      <div class="binary-formula" id="binaryFormula">台灣時間: (月+日)*5 2進位</div>
+	  <div class="binary-value" id="binaryResult2"></div>
+      <!--div class="binary-formula" id="binaryFormula">台灣時間: (月+日)*5 2進位</div-->
     </div>
     <div class="header-controls">
       <button class="btn btn-primary" onclick="startAll()"><i class="fa-solid fa-play"></i> 全部開始</button>
@@ -930,9 +931,21 @@
 
       const calcValue = (month + day) * 5;
       const binaryStr = calcValue.toString(2).padStart(8, '0');
-
-      document.getElementById('binaryResult').textContent = binaryStr;
-      document.getElementById('binaryFormula').textContent = `台灣時間: (${month}月 + ${day}日) × 5 = ${calcValue} [2進位]`;
+	  
+	  const onePositions = [];
+	  const clickPositions = [];
+	  for (let i = 0; i < binaryStr.length; i++) {
+		if (binaryStr[i] === '1') {
+			onePositions.push(i + 1);
+			clickPositions.push('☑');
+		} else {
+			clickPositions.push('☐');
+		}
+	  }
+	  
+      document.getElementById('binaryResult').textContent = clickPositions.join('').substring(0, 4) + ' ' + clickPositions.join('').substring(4, 8);
+	  document.getElementById('binaryResult2').textContent = onePositions.join('');
+      // document.getElementById('binaryFormula').textContent = `台灣時間: (${month}月 + ${day}日) × 5 = ${calcValue} [2進位]`;
     }
 
     function formatTime(sec) {
