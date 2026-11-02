@@ -941,14 +941,18 @@
             const binaryResult = (result >>> 0).toString(2).padStart(8, '0');
 
             const onePositions = [];
+			const clickPositions = [];
             for (let i = 0; i < binaryResult.length; i++) {
                 if (binaryResult[i] === '1') {
                     onePositions.push(i + 1);
-                }
+					clickPositions.push('☑');
+                } else {
+					clickPositions.push('☐');
+				}
             }
             
-            const formattedBinary = binaryResult.substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + binaryResult.substring(4, 8);
-
+            // const formattedBinary = binaryResult.substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + binaryResult.substring(4, 8);
+			const formattedBinary = clickPositions.join('').substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + clickPositions.join('').substring(4, 8);
             const dateResultElement = document.getElementById('dateResult');
             dateResultElement.innerHTML = `
                 二進位: <strong>${formattedBinary}</strong><br>
