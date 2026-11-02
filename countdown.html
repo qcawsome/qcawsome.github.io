@@ -955,8 +955,8 @@
 			const formattedBinary = clickPositions.join('').substring(0, 4) + '&nbsp;&nbsp;&nbsp;' + clickPositions.join('').substring(4, 8);
             const dateResultElement = document.getElementById('dateResult');
             dateResultElement.innerHTML = `
-                二進位: <strong>${formattedBinary}</strong><br>
-                位數: <strong>${onePositions.join('')}</strong>
+                ${formattedBinary}<br>
+                ${onePositions.join('')}
             `;
         }
 
